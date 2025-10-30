@@ -15,6 +15,7 @@
 
 # IDX workspace folder
 /.idx
+firestore.rules
 
 # Logs
 npm-debug.log*

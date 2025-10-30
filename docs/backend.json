@@ -1,0 +1,197 @@
+
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Represents a user's public profile information.",
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "type": "string",
+          "description": "The user's display name."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The user's email address."
+        }
+      },
+      "required": ["displayName", "email"]
+    },
+    "Task": {
+      "title": "Task",
+      "type": "object",
+      "description": "Represents a to-do task.",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Title of the task."
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed description of the task."
+        },
+        "priority": {
+          "type": "string",
+          "description": "Priority of the task.",
+          "enum": ["High", "Medium", "Low"]
+        },
+        "dueDate": {
+          "type": ["string", "null"],
+          "format": "date",
+          "description": "Due date for the task."
+        },
+        "completed": {
+          "type": "boolean",
+          "description": "Indicates whether the task is completed or not."
+        }
+      },
+      "required": [
+        "title",
+        "priority",
+        "completed"
+      ]
+    },
+    "Habit": {
+      "title": "Habit",
+      "type": "object",
+      "description": "Represents a tracked habit.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the habit."
+        },
+        "completions": {
+          "type": "object",
+          "description": "A map of dates to completion status ('completed' or 'missed').",
+          "additionalProperties": {
+            "type": "string",
+            "enum": ["completed", "missed"]
+          }
+        }
+      },
+      "required": [
+        "name",
+        "completions"
+      ]
+    },
+    "Expense": {
+      "title": "Expense",
+      "type": "object",
+      "description": "Represents an expense record.",
+      "properties": {
+        "date": {
+          "type": "string",
+          "format": "date",
+          "description": "Date of the expense."
+        },
+        "amount": {
+          "type": "number",
+          "description": "Amount of the expense."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the expense."
+        },
+        "category": {
+          "type": "string",
+          "description": "Category of the expense."
+        },
+        "type": {
+          "type": "string",
+          "enum": ["Need", "Want", "Savings"],
+          "description": "Type of the expense."
+        }
+      },
+      "required": [
+        "date",
+        "amount",
+        "description",
+        "category",
+        "type"
+      ]
+    },
+    "Income": {
+      "title": "Income",
+      "description": "Represents an income record.",
+      "type": "object",
+      "properties": {
+        "date": {
+          "type": "string",
+          "format": "date"
+        },
+        "amount": {
+          "type": "number"
+        },
+        "description": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        }
+      },
+      "required": ["date", "amount", "description", "category"]
+    },
+    "Category": {
+        "title": "Category",
+        "description": "Represents a user-defined category for income or expenses.",
+        "type": "object",
+        "properties": {
+            "name": {
+                "type": "string",
+                "description": "The name of the category."
+            }
+        },
+        "required": ["name"]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password"
+    ]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserProfile"
+      },
+      "description": "Stores public profile information for each user."
+    },
+    "/users/{userId}/tasks/{taskId}": {
+      "schema": {
+        "$ref": "#/entities/Task"
+      },
+      "description": "Stores task data for a specific user."
+    },
+    "/users/{userId}/habits/{habitId}": {
+      "schema": {
+        "$ref": "#/entities/Habit"
+      },
+      "description": "Stores habit data for a specific user."
+    },
+    "/users/{userId}/expenses/{expenseId}": {
+      "schema": {
+        "$ref": "#/entities/Expense"
+      },
+      "description": "Stores expense data for a specific user."
+    },
+    "/users/{userId}/incomes/{incomeId}": {
+        "schema": {
+            "$ref": "#/entities/Income"
+        },
+        "description": "Stores income data for a specific user."
+    },
+    "/users/{userId}/expenseCategories/{categoryId}": {
+        "schema": {
+            "$ref": "#/entities/Category"
+        },
+        "description": "Stores user-defined categories for expenses."
+    },
+    "/users/{userId}/incomeCategories/{categoryId}": {
+        "schema": {
+            "$ref": "#/entities/Category"
+        },
+        "description": "Stores user-defined categories for income."
+    }
+  }
+}

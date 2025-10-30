@@ -1,0 +1,22 @@
+{
+  "placeholderImages": [
+    {
+      "id": "1",
+      "description": "A person organizing items on a desk.",
+      "imageUrl": "https://images.unsplash.com/photo-1758874573188-5d7380fa647a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxvcmdhbml6aW5nJTIwZGVza3xlbnwwfHx8fDE3NjE0ODgzOTh8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "organizing desk"
+    },
+    {
+      "id": "2",
+      "description": "A person meditating in a calm environment.",
+      "imageUrl": "https://images.unsplash.com/photo-1609433717964-2b4fb94d047f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw4fHxtZWRpdGF0aW9uJTIwcGVhY2V8ZW58MHx8fHwxNzYxNDU4OTE1fDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "meditation peace"
+    },
+    {
+      "id": "3",
+      "description": "A person reviewing financial documents with a calculator.",
+      "imageUrl": "https://images.unsplash.com/photo-1707779491435-000c45820db2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw5fHxmaW5hbmNlJTIwY2FsY3VsYXRvcnxlbnwwfHx8fDE3NjE0NzI3OTJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "finance calculator"
+    }
+  ]
+}

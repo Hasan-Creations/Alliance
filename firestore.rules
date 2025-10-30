@@ -1,0 +1,190 @@
+/**
+ * @fileoverview Firestore Security Rules for the application.
+ *
+ * Core Philosophy:
+ * This ruleset enforces a strict user-ownership model. Users can only
+ * read and write data associated with their own user ID. This ensures
+ * data privacy and prevents unauthorized access.
+ *
+ * Data Structure:
+ * All data is nested under /users/{userId}, providing a clear
+ * hierarchical structure for data organization and security.
+ *
+ * Key Security Decisions:
+ * - User listing is disallowed to prevent potential information leaks.
+ * - All write operations require authentication to prevent anonymous data modification.
+ * - Data validation is relaxed to allow for rapid prototyping.
+ */
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    /**
+     * @description Allows users to read and write their own profile data.
+     * @path /users/{userId}
+     * @allow (create) - User with UID 'user123' can create their profile with matching userId.
+     *   request.auth.uid == 'user123'
+     * @allow (get, update, delete) - User with UID 'user123' can read/update/delete their profile.
+     *   request.auth.uid == 'user123'
+     * @deny (create) - User with UID 'user456' cannot create a profile for userId 'user123'.
+     *   request.auth.uid != 'user123'
+     * @deny (get, update, delete) - User with UID 'user456' cannot access profile for userId 'user123'.
+     *   request.auth.uid != 'user123'
+     * @principle Enforces document ownership for profile data.
+     */
+    match /users/{userId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+      allow get: if isOwner(userId);
+      allow list: if false;
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && resource != null;
+      allow delete: if isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Allows a user to manage their own tasks.
+     * @path /users/{userId}/tasks/{taskId}
+     * @allow (create) - User with UID 'user123' can create a task under their userId.
+     *   request.auth.uid == 'user123'
+     * @allow (get, list, update, delete) - User with UID 'user123' can manage their tasks.
+     *   request.auth.uid == 'user123'
+     * @deny (create) - User with UID 'user456' cannot create tasks under userId 'user123'.
+     *   request.auth.uid != 'user123'
+     * @deny (get, list, update, delete) - User with UID 'user456' cannot access tasks under userId 'user123'.
+     *   request.auth.uid != 'user123'
+     * @principle Enforces user-specific data access for tasks.
+     */
+    match /users/{userId}/tasks/{taskId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && resource != null;
+      allow delete: if isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Allows a user to manage their own habits.
+     * @path /users/{userId}/habits/{habitId}
+     * @allow (create) - User with UID 'user123' can create a habit under their userId.
+     *   request.auth.uid == 'user123'
+     * @allow (get, list, update, delete) - User with UID 'user123' can manage their habits.
+     *   request.auth.uid == 'user123'
+     * @deny (create) - User with UID 'user456' cannot create habits under userId 'user123'.
+     *   request.auth.uid != 'user123'
+     * @deny (get, list, update, delete) - User with UID 'user456' cannot access habits under userId 'user123'.
+     *   request.auth.uid != 'user123'
+     * @principle Enforces user-specific data access for habits.
+     */
+    match /users/{userId}/habits/{habitId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && resource != null;
+      allow delete: if isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Allows a user to manage their own expenses.
+     * @path /users/{userId}/expenses/{expenseId}
+     * @allow (create) - User with UID 'user123' can create an expense under their userId.
+     *   request.auth.uid == 'user123'
+     * @allow (get, list, update, delete) - User with UID 'user123' can manage their expenses.
+     *   request.auth.uid == 'user123'
+     * @deny (create) - User with UID 'user456' cannot create expenses under userId 'user123'.
+     *   request.auth.uid != 'user123'
+     * @deny (get, list, update, delete) - User with UID 'user456' cannot access expenses under userId 'user123'.
+     *   request.auth.uid != 'user123'
+     * @principle Enforces user-specific data access for expenses.
+     */
+    match /users/{userId}/expenses/{expenseId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && resource != null;
+      allow delete: if isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Allows a user to manage their own incomes.
+     * @path /users/{userId}/incomes/{incomeId}
+     * @allow (create) - User with UID 'user123' can create an income record under their userId.
+     *   request.auth.uid == 'user123'
+     * @allow (get, list, update, delete) - User with UID 'user123' can manage their income records.
+     *   request.auth.uid == 'user123'
+     * @deny (create) - User with UID 'user456' cannot create income records under userId 'user123'.
+     *   request.auth.uid != 'user123'
+     * @deny (get, list, update, delete) - User with UID 'user456' cannot access income records under userId 'user123'.
+     *   request.auth.uid != 'user123'
+     * @principle Enforces user-specific data access for incomes.
+     */
+    match /users/{userId}/incomes/{incomeId} {
+      function isOwner(userId) {
+        return request.auth != null && request.auth.uid == userId;
+      }
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow update: if isOwner(userId) && resource != null;
+      allow delete: if isOwner(userId) && resource != null;
+    }
+
+    /**
+     * @description Allows a user to manage their own expense categories.
+     * @path /users/{userId}/expenseCategories/{categoryId}
+     * @allow (create) - User with UID 'user123' can create an expense category under their userId.
+     *   request.auth.uid == 'user123'
+     * @allow (get, list, update, delete) - User with UID 'user123' can manage their expense categories.
+     *   request.auth.uid == 'user123'
+     * @deny (create) - User with UID 'user456' cannot create expense categories under userId 'user123'.
+     *   request.auth.uid != 'user123'
+     * @deny (get, list, update, delete) - User with UID 'user456' cannot access expense categories under userId 'user123'.
+     *   request.auth.uid != 'user123'
+     * @principle Enforces user-specific data access for expense categories.
+     */
+    match /users/{userId}/expenseCategories/{categoryId} {
+        function isOwner(userId) {
+            return request.auth != null && request.auth.uid == userId;
+        }
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update: if isOwner(userId) && resource != null;
+        allow delete: if isOwner(userId) && resource != null;
+    }
+
+       /**
+     * @description Allows a user to manage their own income categories.
+     * @path /users/{userId}/incomeCategories/{categoryId}
+     * @allow (create) - User with UID 'user123' can create an income category under their userId.
+     *   request.auth.uid == 'user123'
+     * @allow (get, list, update, delete) - User with UID 'user123' can manage their income categories.
+     *   request.auth.uid == 'user123'
+     * @deny (create) - User with UID 'user456' cannot create income categories under userId 'user123'.
+     *   request.auth.uid != 'user123'
+     * @deny (get, list, update, delete) - User with UID 'user456' cannot access income categories under userId 'user123'.
+     *   request.auth.uid != 'user123'
+     * @principle Enforces user-specific data access for income categories.
+     */
+    match /users/{userId}/incomeCategories/{categoryId} {
+        function isOwner(userId) {
+            return request.auth != null && request.auth.uid == userId;
+        }
+        allow get: if isOwner(userId);
+        allow list: if isOwner(userId);
+        allow create: if isOwner(userId);
+        allow update: if isOwner(userId) && resource != null;
+        allow delete: if isOwner(userId) && resource != null;
+    }
+  }
+}

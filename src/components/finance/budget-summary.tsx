@@ -166,7 +166,7 @@ export function BudgetSummary() {
               className="mx-auto aspect-square max-h-[300px] min-h-[200px]"
             >
              {totalAllocated > 0 ? (
-                <DonutChart data={chartData} dataKey="amount" nameKey="type">
+                <DonutChart data={chartData} dataKey="amount" nameKey="type" config={chartConfig}>
                     <Donut>
                       <DonutLabel
                           label="Total Spent"

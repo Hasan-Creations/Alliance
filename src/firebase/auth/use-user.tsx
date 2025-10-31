@@ -1,4 +1,5 @@
 'use client';
+
 import { useFirebase, type UserHookResult } from '@/firebase/provider';
 
 /**

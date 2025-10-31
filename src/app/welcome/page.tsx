@@ -21,7 +21,7 @@ export default function WelcomePage() {
                 Organize your life, achieve your goals.
               </h1>
               <p className="text-lg text-muted-foreground mb-8">
-                TaskNest is the all-in-one platform to manage your tasks, track your habits, and master your finances. Stop juggling apps and start building a more organized life today.
+                Alliance is the all-in-one platform to manage your tasks, track your habits, and master your finances. Stop juggling apps and start building a more organized life today.
               </p>
               <Button asChild size="lg">
                 <Link href="/login">Get Started for Free</Link>
@@ -41,7 +41,7 @@ export default function WelcomePage() {
       </main>
       <footer className="container mx-auto px-4 sm:px-6 lg:px-8 py-6 text-center text-muted-foreground text-sm">
         <div className="flex justify-center gap-4">
-          <span>&copy; {new Date().getFullYear()} TaskNest. All rights reserved.</span>
+          <span>&copy; {new Date().getFullYear()} Alliance. All rights reserved.</span>
           <Link href="/contact" className="hover:text-primary">Contact</Link>
         </div>
       </footer>

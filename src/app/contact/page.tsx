@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 
 export const metadata: Metadata = {
-    title: 'Contact Us | TaskNest',
+    title: 'Contact Us | Alliance',
 };
 
 export default function ContactPage() {

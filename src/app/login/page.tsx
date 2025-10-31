@@ -94,7 +94,7 @@ export default function LoginPage() {
             </div>
           <CardTitle className="text-2xl">{isSignUp ? 'Create an Account' : 'Welcome Back'}</CardTitle>
           <CardDescription>
-            {isSignUp ? 'Enter your details to get started.' : 'Sign in to continue to TaskNest.'}
+            {isSignUp ? 'Enter your details to get started.' : 'Sign in to continue to Alliance.'}
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>

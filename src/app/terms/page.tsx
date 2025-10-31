@@ -3,7 +3,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-    title: 'Terms and Conditions | TaskNest',
+    title: 'Terms and Conditions | Alliance',
 };
 
 export default function TermsAndConditionsPage() {
@@ -17,10 +17,10 @@ export default function TermsAndConditionsPage() {
 
                 <div className="prose prose-lg max-w-none text-foreground space-y-4">
                     <p>
-                        Welcome to TaskNest! These terms and conditions outline the rules and regulations for the use of TaskNest's Website, located at this domain.
+                        Welcome to Alliance! These terms and conditions outline the rules and regulations for the use of Alliance's Website, located at this domain.
                     </p>
                     <p>
-                        By accessing this website we assume you accept these terms and conditions. Do not continue to use TaskNest if you do not agree to take all of the terms and conditions stated on this page.
+                        By accessing this website we assume you accept these terms and conditions. Do not continue to use Alliance if you do not agree to take all of the terms and conditions stated on this page.
                     </p>
 
                     <h2 className="text-2xl font-semibold font-headline">Accounts</h2>
@@ -35,7 +35,7 @@ export default function TermsAndConditionsPage() {
 
                     <h2 className="text-2xl font-semibold font-headline">Intellectual Property</h2>
                     <p>
-                        The Service and its original content, features, and functionality are and will remain the exclusive property of TaskNest and its licensors.
+                        The Service and its original content, features, and functionality are and will remain the exclusive property of Alliance and its licensors.
                     </p>
 
                     <h2 className="text-2xl font-semibold font-headline">Termination</h2>

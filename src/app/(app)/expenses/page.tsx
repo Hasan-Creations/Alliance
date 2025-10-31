@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { FinanceView } from "@/components/finance/finance-view";
 
 export const metadata: Metadata = {
-  title: "Finance Tracker | TaskNest",
+  title: "Finance Tracker | Alliance",
   description: "Track your expenses and income, manage your budget.",
 };
 

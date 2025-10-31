@@ -1,0 +1,21 @@
+{
+  "name": "Alliance",
+  "short_name": "Alliance",
+  "description": "Organize your life, one task at a time.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#D6B9FC",
+  "theme_color": "#50207A",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

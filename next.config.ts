@@ -1,5 +1,14 @@
+import type { NextConfig } from 'next';
+import createNextPwa from '@ducanh2912/next-pwa';
 
-import type {NextConfig} from 'next';
+const withPwa = createNextPwa({
+  dest: 'public',
+  register: true,
+  // @ts-ignore
+  skipWaiting: true,
+  disable: process.env.NODE_ENV === 'development',
+  sw: 'firebase-messaging-sw.js',
+});
 
 const nextConfig: NextConfig = {
   /* config options here */
@@ -34,4 +43,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withPwa(nextConfig);

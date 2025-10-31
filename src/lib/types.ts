@@ -47,6 +47,13 @@ export interface IncomeCategory {
     name: string;
 }
 
+export interface UserSettings {
+    dailySummary: boolean;
+    taskReminders: boolean;
+    overdueAlerts: boolean;
+    motivationalMessages: boolean;
+}
+
 export interface AppData {
   tasks: Task[];
   habits: Habit[];
@@ -54,4 +61,5 @@ export interface AppData {
   expenseCategories: ExpenseCategory[];
   incomes: Income[];
   incomeCategories: IncomeCategory[];
+  settings: UserSettings;
 }

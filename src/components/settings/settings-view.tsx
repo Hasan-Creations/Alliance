@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Button } from '@/components/ui/button';
@@ -5,6 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuth, useUser } from '@/firebase';
 import { LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { NotificationPreferences } from './notification-preferences';
 
 export function SettingsView() {
   const auth = useAuth();
@@ -45,6 +47,8 @@ export function SettingsView() {
             </div>
         </CardContent>
       </Card>
+
+      <NotificationPreferences />
     </div>
   );
 }

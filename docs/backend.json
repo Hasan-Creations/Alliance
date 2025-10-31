@@ -143,6 +143,23 @@
             }
         },
         "required": ["name"]
+    },
+    "UserSettings": {
+        "title": "User Settings",
+        "description": "Stores user-specific application settings.",
+        "type": "object",
+        "properties": {
+            "notifications": {
+                "type": "object",
+                "description": "Notification preferences.",
+                "properties": {
+                    "dailySummary": { "type": "boolean", "description": "Enable daily summary notifications." },
+                    "taskReminders": { "type": "boolean", "description": "Enable task reminder notifications." },
+                    "overdueAlerts": { "type": "boolean", "description": "Enable overdue task alert notifications." },
+                    "motivationalMessages": { "type": "boolean", "description": "Enable motivational message notifications." }
+                }
+            }
+        }
     }
   },
   "auth": {
@@ -192,6 +209,12 @@
             "$ref": "#/entities/Category"
         },
         "description": "Stores user-defined categories for income."
+    },
+    "/users/{userId}/settings/notifications": {
+        "schema": {
+            "$ref": "#/entities/UserSettings/properties/notifications"
+        },
+        "description": "Stores notification preferences for a specific user."
     }
   }
 }

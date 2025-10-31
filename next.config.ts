@@ -4,9 +4,6 @@ import createNextPwa from '@ducanh2912/next-pwa';
 const withPwa = createNextPwa({
   dest: 'public',
   register: true,
-  // @ts-ignore
-  skipWaiting: true,
-  disable: process.env.NODE_ENV === 'development',
   sw: 'firebase-messaging-sw.js',
 });
 

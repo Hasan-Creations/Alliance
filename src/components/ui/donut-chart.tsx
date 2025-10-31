@@ -40,8 +40,8 @@ const DonutChart = React.forwardRef<
 DonutChart.displayName = "DonutChart"
 
 const Donut = React.forwardRef<
-  React.ElementRef<typeof Pie>,
-  React.ComponentProps<typeof Pie>
+  any,
+  Omit<React.ComponentProps<typeof Pie>, 'ref'>
 >(({ className, ...props }, ref) => {
   return (
     <Pie
@@ -55,10 +55,11 @@ const Donut = React.forwardRef<
 })
 Donut.displayName = "Donut"
 
-type DonutLabel = React.ComponentProps<typeof Label> & {
-  value: string
-  valueClassName?: string
-}
+type DonutLabelProps = React.ComponentProps<typeof Label> & {
+  value: string;
+  label: React.ReactNode;
+  valueClassName?: string;
+};
 
 function DonutLabel({
   label,
@@ -66,7 +67,7 @@ function DonutLabel({
   className,
   valueClassName,
   ...props
-}: DonutLabel) {
+}: DonutLabelProps) {
   return (
     <Label
       {...props}

@@ -12,13 +12,15 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!isUserLoading && user) {
-      router.replace('/dashboard');
+    if (!isUserLoading) {
+      if (user) {
+        router.replace('/dashboard');
+      }
     }
   }, [user, isUserLoading, router]);
 
   if (isUserLoading || user) {
-    // You can show a loading spinner here while checking the auth state
+    // Show a loading spinner while checking auth state or if user exists (and redirect is imminent)
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
@@ -29,5 +31,6 @@ export default function Home() {
     );
   }
   
+  // If not loading and no user, show the public-facing welcome page.
   return <WelcomePage />;
 }

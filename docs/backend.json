@@ -160,6 +160,23 @@
                 }
             }
         }
+    },
+    "FCMToken": {
+      "title": "FCM Token",
+      "description": "Represents a Firebase Cloud Messaging token for a user's device.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The ID of the user this token belongs to."
+        },
+        "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The timestamp when the token was created."
+        }
+      },
+      "required": ["userId", "createdAt"]
     }
   },
   "auth": {
@@ -215,6 +232,12 @@
             "$ref": "#/entities/UserSettings/properties/notifications"
         },
         "description": "Stores notification preferences for a specific user."
+    },
+    "/userTokens/{tokenId}": {
+        "schema": {
+            "$ref": "#/entities/FCMToken"
+        },
+        "description": "Stores FCM tokens for push notifications, with the token as the document ID."
     }
   }
 }

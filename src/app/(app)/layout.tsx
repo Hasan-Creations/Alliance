@@ -9,6 +9,7 @@ import { useUser } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { useEffect } from "react";
+import { FcmTokenManager } from "@/components/FcmTokenManager";
 
 function AppLayoutContent({ children }: { children: ReactNode }) {
   const { isMobile } = useSidebar();
@@ -35,6 +36,7 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
   
   return (
     <div className="flex min-h-screen w-full">
+      <FcmTokenManager />
       <Sidebar>
         <MainNav />
       </Sidebar>

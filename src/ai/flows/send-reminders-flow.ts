@@ -79,9 +79,28 @@ export async function sendReminders() {
 
       const response = await messaging.sendEachForMulticast(message);
       console.log('Successfully sent message to:', response.successCount, 'tokens');
+      
       if (response.failureCount > 0) {
         console.log('Failed to send to:', response.failureCount, 'tokens');
-        // You could add logic here to clean up invalid tokens
+        const tokensToDelete: Promise<any>[] = [];
+        response.responses.forEach((resp, idx) => {
+          if (!resp.success && resp.error) { // Check if resp.error exists
+            console.error(`Failure for token ${tokens[idx]}:`, resp.error);
+            // Check for the specific error indicating an invalid or unregistered token
+            if (
+              resp.error.code === 'messaging/invalid-registration-token' ||
+              resp.error.code === 'messaging/registration-token-not-registered'
+            ) {
+              const badToken = tokens[idx];
+              console.log(`Scheduling deletion for invalid token: ${badToken}`);
+              tokensToDelete.push(db.collection('userTokens').doc(badToken).delete());
+            }
+          }
+        });
+
+        // Wait for all invalid tokens to be deleted.
+        await Promise.all(tokensToDelete);
+        console.log(`Cleaned up ${tokensToDelete.length} invalid tokens.`);
       }
     }
   } catch (error) {

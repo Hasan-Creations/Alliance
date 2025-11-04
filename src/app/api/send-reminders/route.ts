@@ -1,25 +1,18 @@
-import admin from "firebase-admin";
 
-const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_KEY!);
+import { sendReminders } from '@/ai/flows/send-reminders-flow';
+import {NextRequest, NextResponse} from 'next/server';
 
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-  });
-}
+export const GET = async (req: NextRequest) => {
+    // Secure the endpoint to be triggered only by Vercel Cron Jobs
+    if (req.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
+        return new NextResponse('Unauthorized', { status: 401 });
+    }
 
-export async function GET() {
-  const tokensSnapshot = await admin.firestore().collection("userTokens").get();
-
-  const messages = tokensSnapshot.docs.map(doc => ({
-    token: doc.id,
-    notification: {
-      title: "Task Reminder 🕒",
-      body: "You still have unfinished tasks today!",
-    },
-  }));
-
-  await Promise.all(messages.map(msg => admin.messaging().send(msg)));
-
-  return Response.json({ success: true });
-}
+    try {
+        await sendReminders();
+        return NextResponse.json({ success: true, message: 'Reminders sent successfully.' });
+    } catch (error) {
+        console.error('Error sending reminders:', error);
+        return new NextResponse('Internal Server Error', { status: 500 });
+    }
+};

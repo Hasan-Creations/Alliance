@@ -19,7 +19,7 @@ import { initiateEmailSignIn, initiateEmailSignUp } from '@/firebase/non-blockin
 import { useToast } from '@/hooks/use-toast';
 import { AppLogo } from '@/components/app-logo';
 import { useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
 
 export default function LoginPage() {
@@ -29,6 +29,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   
   const auth = useAuth();
   const { user, isUserLoading } = useUser();
@@ -36,8 +37,10 @@ export default function LoginPage() {
   const { toast } = useToast();
 
   useEffect(() => {
+    // If the user is logged in, redirect them to the main router page.
+    // The router page will handle redirecting to their preferred startup page.
     if (!isUserLoading && user) {
-      router.replace('/dashboard'); // Redirect to dashboard if already logged in
+      router.replace('/'); 
     }
   }, [user, isUserLoading, router]);
 
@@ -74,6 +77,7 @@ export default function LoginPage() {
     }
   };
 
+  // While loading or if user exists (and redirect is imminent), show a loader.
   if (isUserLoading || user) {
      return (
        <div className="flex min-h-screen w-full items-center justify-center bg-background">
@@ -85,6 +89,7 @@ export default function LoginPage() {
     );
   }
 
+  // Render the login form if not loading and no user.
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <Card className="w-full max-w-sm">
@@ -123,27 +128,47 @@ export default function LoginPage() {
                 onChange={(e) => setEmail(e.target.value)}
               />
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 relative">
               <Label htmlFor="password">Password</Label>
-              <Input 
-                id="password" 
-                type="password" 
-                required 
+              <Input
+                id="password"
+                type={showPassword ? 'text' : 'password'}
+                required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                className="pr-10"
               />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-1 top-7 h-7 w-7 text-muted-foreground"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </Button>
             </div>
             {isSignUp && (
               <>
-                <div className="space-y-2">
+                <div className="space-y-2 relative">
                   <Label htmlFor="confirm-password">Confirm Password</Label>
                   <Input
                     id="confirm-password"
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     required
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="pr-10"
                   />
+                   <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    className="absolute right-1 top-7 h-7 w-7 text-muted-foreground"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
                 </div>
                 <div className="flex items-center space-x-2">
                     <Checkbox id="terms" checked={agreedToTerms} onCheckedChange={(checked) => setAgreedToTerms(Boolean(checked))} />

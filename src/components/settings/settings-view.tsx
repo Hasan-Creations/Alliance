@@ -7,6 +7,7 @@ import { useAuth, useUser } from '@/firebase';
 import { LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { NotificationPreferences } from './notification-preferences';
+import { StartupPreferences } from './startup-preferences';
 
 export function SettingsView() {
   const auth = useAuth();
@@ -48,6 +49,7 @@ export function SettingsView() {
         </CardContent>
       </Card>
 
+      <StartupPreferences />
       <NotificationPreferences />
     </div>
   );

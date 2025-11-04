@@ -1,4 +1,5 @@
 
+
 export type Priority = "High" | "Medium" | "Low";
 export type HabitFrequency = "Daily" | "Weekly" | "Custom";
 export type ExpenseType = "Need" | "Want" | "Savings";
@@ -53,6 +54,11 @@ export interface UserSettings {
     overdueAlerts: boolean;
     motivationalMessages: boolean;
 }
+
+export interface UserStartupSettings {
+    startupPage: string;
+}
+
 
 export interface AppData {
   tasks: Task[];

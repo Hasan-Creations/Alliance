@@ -15,14 +15,17 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
   const { isMobile } = useSidebar();
   const { user, isUserLoading } = useUser();
   const router = useRouter();
-
+  
   useEffect(() => {
+    // If the user is not loading and there is no user, redirect to the root page.
+    // The root page will handle showing the login screen.
     if (!isUserLoading && !user) {
-      router.push('/login');
+      router.replace('/');
     }
   }, [isUserLoading, user, router]);
 
-
+  // While checking for the user, or if the user doesn't exist yet (and redirection is imminent),
+  // show a loading screen.
   if (isUserLoading || !user) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-background">
@@ -34,6 +37,7 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
     );
   }
   
+  // If the user is logged in, render the main app layout.
   return (
     <div className="flex min-h-screen w-full">
       <FcmTokenManager />

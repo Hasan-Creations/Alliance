@@ -1,3 +1,4 @@
+
 "use client";
 
 import { ExpensesView } from "@/components/expenses/expenses-view";
@@ -12,7 +13,7 @@ export function FinanceView() {
         <h1 className="text-3xl font-bold font-headline">Finance Tracker</h1>
         <p className="text-muted-foreground">Track your expenses and income, manage your budget.</p>
       </div>
-      <Tabs defaultValue="summary" className="w-full">
+      <Tabs defaultValue="expenses" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="summary">Summary</TabsTrigger>
           <TabsTrigger value="expenses">Expenses</TabsTrigger>

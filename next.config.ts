@@ -1,3 +1,4 @@
+
 import type { NextConfig } from 'next';
 import createNextPwa from '@ducanh2912/next-pwa';
 
@@ -5,6 +6,24 @@ const withPwa = createNextPwa({
   dest: 'public',
   register: true,
   sw: 'firebase-messaging-sw.js',
+  cacheStartUrl: true,
+  disable: process.env.NODE_ENV === 'development',
+  workboxOptions: {
+    disableDevLogs: true,
+    runtimeCaching: [
+      {
+        urlPattern: ({ request }: { request: Request }) => request.mode === 'navigate',
+        handler: 'CacheFirst',
+        options: {
+          cacheName: 'pages',
+          expiration: {
+            maxEntries: 60,
+            maxAgeSeconds: 30 * 24 * 60 * 60, // 30 Days
+          },
+        },
+      },
+    ],
+  },
 });
 
 const nextConfig: NextConfig = {
@@ -31,7 +50,7 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
       {
-        protocol: 'https' as const,
+        protocol: 'https',
         hostname: 'picsum.photos',
         port: '',
         pathname: '/**',

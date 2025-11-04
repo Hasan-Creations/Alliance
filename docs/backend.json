@@ -1,4 +1,3 @@
-
 {
   "entities": {
     "UserProfile": {
@@ -16,7 +15,10 @@
           "description": "The user's email address."
         }
       },
-      "required": ["displayName", "email"]
+      "required": [
+        "displayName",
+        "email"
+      ]
     },
     "Task": {
       "title": "Task",
@@ -34,10 +36,17 @@
         "priority": {
           "type": "string",
           "description": "Priority of the task.",
-          "enum": ["High", "Medium", "Low"]
+          "enum": [
+            "High",
+            "Medium",
+            "Low"
+          ]
         },
         "dueDate": {
-          "type": ["string", "null"],
+          "type": [
+            "string",
+            "null"
+          ],
           "format": "date",
           "description": "Due date for the task."
         },
@@ -66,7 +75,10 @@
           "description": "A map of dates to completion status ('completed' or 'missed').",
           "additionalProperties": {
             "type": "string",
-            "enum": ["completed", "missed"]
+            "enum": [
+              "completed",
+              "missed"
+            ]
           }
         }
       },
@@ -99,7 +111,11 @@
         },
         "type": {
           "type": "string",
-          "enum": ["Need", "Want", "Savings"],
+          "enum": [
+            "Need",
+            "Want",
+            "Savings"
+          ],
           "description": "Type of the expense."
         }
       },
@@ -130,36 +146,65 @@
           "type": "string"
         }
       },
-      "required": ["date", "amount", "description", "category"]
+      "required": [
+        "date",
+        "amount",
+        "description",
+        "category"
+      ]
     },
     "Category": {
-        "title": "Category",
-        "description": "Represents a user-defined category for income or expenses.",
-        "type": "object",
-        "properties": {
-            "name": {
-                "type": "string",
-                "description": "The name of the category."
-            }
-        },
-        "required": ["name"]
+      "title": "Category",
+      "description": "Represents a user-defined category for income or expenses.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the category."
+        }
+      },
+      "required": [
+        "name"
+      ]
     },
     "UserSettings": {
-        "title": "User Settings",
-        "description": "Stores user-specific application settings.",
-        "type": "object",
-        "properties": {
-            "notifications": {
-                "type": "object",
-                "description": "Notification preferences.",
-                "properties": {
-                    "dailySummary": { "type": "boolean", "description": "Enable daily summary notifications." },
-                    "taskReminders": { "type": "boolean", "description": "Enable task reminder notifications." },
-                    "overdueAlerts": { "type": "boolean", "description": "Enable overdue task alert notifications." },
-                    "motivationalMessages": { "type": "boolean", "description": "Enable motivational message notifications." }
-                }
+      "title": "User Settings",
+      "description": "Stores user-specific application settings.",
+      "type": "object",
+      "properties": {
+        "notifications": {
+          "type": "object",
+          "description": "Notification preferences.",
+          "properties": {
+            "dailySummary": {
+              "type": "boolean",
+              "description": "Enable daily summary notifications."
+            },
+            "taskReminders": {
+              "type": "boolean",
+              "description": "Enable task reminder notifications."
+            },
+            "overdueAlerts": {
+              "type": "boolean",
+              "description": "Enable overdue task alert notifications."
+            },
+            "motivationalMessages": {
+              "type": "boolean",
+              "description": "Enable motivational message notifications."
             }
+          }
+        },
+        "startup": {
+          "type": "object",
+          "description": "Startup preferences.",
+          "properties": {
+            "startupPage": {
+              "type": "string",
+              "description": "The default page to load on app start."
+            }
+          }
         }
+      }
     },
     "FCMToken": {
       "title": "FCM Token",
@@ -171,12 +216,15 @@
           "description": "The ID of the user this token belongs to."
         },
         "createdAt": {
-            "type": "string",
-            "format": "date-time",
-            "description": "The timestamp when the token was created."
+          "type": "string",
+          "format": "date-time",
+          "description": "The timestamp when the token was created."
         }
       },
-      "required": ["userId", "createdAt"]
+      "required": [
+        "userId",
+        "createdAt"
+      ]
     }
   },
   "auth": {
@@ -210,34 +258,40 @@
       "description": "Stores expense data for a specific user."
     },
     "/users/{userId}/incomes/{incomeId}": {
-        "schema": {
-            "$ref": "#/entities/Income"
-        },
-        "description": "Stores income data for a specific user."
+      "schema": {
+        "$ref": "#/entities/Income"
+      },
+      "description": "Stores income data for a specific user."
     },
     "/users/{userId}/expenseCategories/{categoryId}": {
-        "schema": {
-            "$ref": "#/entities/Category"
-        },
-        "description": "Stores user-defined categories for expenses."
+      "schema": {
+        "$ref": "#/entities/Category"
+      },
+      "description": "Stores user-defined categories for expenses."
     },
     "/users/{userId}/incomeCategories/{categoryId}": {
-        "schema": {
-            "$ref": "#/entities/Category"
-        },
-        "description": "Stores user-defined categories for income."
+      "schema": {
+        "$ref": "#/entities/Category"
+      },
+      "description": "Stores user-defined categories for income."
     },
     "/users/{userId}/settings/notifications": {
-        "schema": {
-            "$ref": "#/entities/UserSettings/properties/notifications"
-        },
-        "description": "Stores notification preferences for a specific user."
+      "schema": {
+        "$ref": "#/entities/UserSettings/properties/notifications"
+      },
+      "description": "Stores notification preferences for a specific user."
+    },
+    "/users/{userId}/settings/startup": {
+      "schema": {
+        "$ref": "#/entities/UserSettings/properties/startup"
+      },
+      "description": "Stores startup preferences for a specific user."
     },
     "/userTokens/{tokenId}": {
-        "schema": {
-            "$ref": "#/entities/FCMToken"
-        },
-        "description": "Stores FCM tokens for push notifications, with the token as the document ID."
+      "schema": {
+        "$ref": "#/entities/FCMToken"
+      },
+      "description": "Stores FCM tokens for push notifications, with the token as the document ID."
     }
   }
 }

@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/sidebar";
 import { AppLogo } from "@/components/app-logo";
 import { CheckSquare, Target, Wallet, Settings, LayoutDashboard } from "lucide-react";
-import { AppViewContext, type View } from "@/app/page";
+import { AppViewContext, type View } from "@/context/app-view-context";
 
 const menuItems: { href: View, label: string, icon: React.ElementType }[] = [
   { href: "dashboard", label: "Dashboard", icon: LayoutDashboard },

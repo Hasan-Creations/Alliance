@@ -2,7 +2,7 @@
 'use client';
 
 import { useContext } from 'react';
-import { AppViewContext } from './layout';
+import { AppViewContext } from '@/context/app-view-context';
 import { DashboardView } from '@/components/dashboard/dashboard-view';
 import { TodoView } from '@/components/todos/todo-view';
 import { HabitsView } from '@/components/habits/habits-view';

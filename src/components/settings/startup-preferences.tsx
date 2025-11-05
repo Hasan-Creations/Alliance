@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useUser, useFirestore, useDoc, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import type { UserStartupSettings } from '@/lib/types';
-import { AppViewContext, type View } from '@/app/page';
+import { AppViewContext, type View } from '@/context/app-view-context';
 
 const defaultSettings: UserStartupSettings = {
   startupPage: 'dashboard',

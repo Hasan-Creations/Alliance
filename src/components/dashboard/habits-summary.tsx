@@ -10,7 +10,7 @@ import { ArrowRight, Check, X } from "lucide-react";
 import { useCollection, useFirestore, useUser, useMemoFirebase } from "@/firebase";
 import { collection } from "firebase/firestore";
 import type { Habit } from "@/lib/types";
-import { AppViewContext } from "@/app/page";
+import { AppViewContext } from "@/context/app-view-context";
 
 export function HabitsSummary() {
   const { setView } = useContext(AppViewContext);

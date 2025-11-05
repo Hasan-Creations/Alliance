@@ -11,7 +11,7 @@ import { ArrowRight } from 'lucide-react';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from "@/firebase";
 import { collection } from "firebase/firestore";
 import type { Task } from "@/lib/types";
-import { AppViewContext } from "@/app/page";
+import { AppViewContext } from "@/context/app-view-context";
 
 const chartConfig = {
   completed: {

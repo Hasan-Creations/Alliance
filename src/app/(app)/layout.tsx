@@ -1,25 +1,17 @@
 
 "use client";
 
-import React, { type ReactNode } from "react";
-import { useSidebar, SidebarProvider, Sidebar } from "@/components/ui/sidebar";
+import React, { type ReactNode, useState } from "react";
+import { useSidebar, SidebarProvider } from "@/components/ui/sidebar";
 import { MainNav } from "@/components/main-nav";
 import { BottomNav } from "@/components/bottom-nav";
 import { useUser } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { FcmTokenManager } from "@/components/FcmTokenManager";
+import { AppViewContext, type View } from "@/context/app-view-context";
 
-export type View = 'dashboard' | 'todos' | 'habits' | 'expenses' | 'settings';
-
-export const AppViewContext = React.createContext<{
-  view: View;
-  setView: (view: View) => void;
-}>({
-  view: 'dashboard',
-  setView: () => {},
-});
 
 function AppLayoutContent({ children }: { children: ReactNode }) {
   const { isMobile } = useSidebar();
@@ -51,9 +43,7 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen w-full">
       <FcmTokenManager />
-      <Sidebar>
-        <MainNav />
-      </Sidebar>
+      <MainNav />
       <main className="flex-1 flex flex-col bg-background w-full">
         <div className="flex-1 py-4 sm:py-6 lg:py-8 pb-24 md:pb-8">
           {children}

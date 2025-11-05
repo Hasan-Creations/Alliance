@@ -1,12 +1,11 @@
 
 'use client';
 
-import React, { type ReactNode, useState, useContext } from "react";
+import React, { useContext } from "react";
 import { useSidebar } from "@/components/ui/sidebar";
 import { MainNav } from "@/components/main-nav";
 import { BottomNav } from "@/components/bottom-nav";
 import { useUser } from "@/firebase";
-import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { FcmTokenManager } from "@/components/FcmTokenManager";
 import { DashboardView } from '@/components/dashboard/dashboard-view';
@@ -16,7 +15,6 @@ import { FinanceView } from '@/components/finance/finance-view';
 import { SettingsView } from '@/components/settings/settings-view';
 import WelcomePage from "./welcome/page";
 import { AppViewContext, type View } from "@/context/app-view-context";
-
 
 export default function AppPage() {
   const { user, isUserLoading } = useUser();

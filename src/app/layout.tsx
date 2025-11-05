@@ -1,9 +1,11 @@
+
 import type { Metadata, Viewport } from 'next';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Toaster } from "@/components/ui/toaster";
 import './globals.css';
 import { cn } from '@/lib/utils';
 import { SidebarProvider } from '@/components/ui/sidebar';
+import { AppViewContextProvider } from '@/context/app-view-context';
 
 export const metadata: Metadata = {
   title: 'Alliance',
@@ -31,7 +33,9 @@ export default function RootLayout({
       <body className={cn("font-body antialiased", "overflow-x-hidden")}>
         <FirebaseClientProvider>
           <SidebarProvider>
-            {children}
+            <AppViewContextProvider>
+              {children}
+            </AppViewContextProvider>
           </SidebarProvider>
         </FirebaseClientProvider>
         <Toaster />

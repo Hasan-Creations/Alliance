@@ -8,29 +8,56 @@
 import * as admin from 'firebase-admin';
 import { format } from 'date-fns';
 
-// Initialize Firebase Admin SDK
-// This should only be done once.
-if (!admin.apps.length) {
+// Helper function to initialize Firebase Admin SDK. It's idempotent.
+function initializeFirebaseAdmin() {
+  // If already initialized, do nothing.
+  if (admin.apps.length > 0) {
+    return true;
+  }
+
+  // Check for both possible environment variable names.
+  const serviceAccountString = process.env.FIREBASE_ADMIN_SERVICE_ACCOUNT || process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+  if (!serviceAccountString) {
+    console.error('[sendReminders] CRITICAL: FIREBASE_ADMIN_SERVICE_ACCOUNT or FIREBASE_SERVICE_ACCOUNT_KEY environment variable is not set. The server cannot authenticate with Firebase.');
+    return false;
+  }
+
   try {
-    // In a deployed environment (like Vercel), use environment variables
-    const serviceAccount = JSON.parse(process.env.FIREBASE_ADMIN_SERVICE_ACCOUNT!);
+    const serviceAccount = JSON.parse(serviceAccountString);
+
+    // The private_key from the environment variable often has its newlines
+    // escaped as "\\n". We need to replace them with actual newline characters "\n"
+    // for the Firebase Admin SDK's crypto library to parse it correctly.
+    if (serviceAccount.private_key) {
+      serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+    }
+
     admin.initializeApp({
       credential: admin.credential.cert(serviceAccount),
     });
-  } catch (e) {
-    console.error('Failed to initialize Firebase Admin SDK:', e);
+    console.log('[sendReminders] Firebase Admin SDK initialized successfully.');
+    return true;
+  } catch (e: any) {
+    console.error('[sendReminders] CRITICAL: Failed to parse FIREBASE_ADMIN_SERVICE_ACCOUNT or initialize Firebase Admin SDK. Please check your service account credentials.', e.message);
+    return false;
   }
 }
 
-const db = admin.firestore();
-const messaging = admin.messaging();
-
 export async function sendReminders() {
+  // Attempt to initialize Firebase Admin. If it fails, stop execution.
+  if (!initializeFirebaseAdmin()) {
+    // A detailed error is already logged by the function above.
+    throw new Error("Firebase Admin SDK initialization failed. Check server logs for details.");
+  }
+
+  // Get Firestore and Messaging instances AFTER initialization.
+  const db = admin.firestore();
+  const messaging = admin.messaging();
+
   console.log('Starting to send reminders...');
   const todayStr = format(new Date(), 'yyyy-MM-dd');
 
   try {
-    // 1. Get all users
     const usersSnapshot = await db.collection('users').get();
     if (usersSnapshot.empty) {
       console.log('No users found.');
@@ -41,7 +68,6 @@ export async function sendReminders() {
       const userId = userDoc.id;
       console.log(`Checking reminders for user: ${userId}`);
 
-      // 2. For each user, find tasks due today
       const tasksSnapshot = await db.collection(`users/${userId}/tasks`)
         .where('dueDate', '==', todayStr)
         .where('completed', '==', false)
@@ -55,7 +81,6 @@ export async function sendReminders() {
       const dueTasksCount = tasksSnapshot.size;
       console.log(`Found ${dueTasksCount} tasks due today for user: ${userId}`);
 
-      // 3. Get the user's FCM tokens
       const tokensSnapshot = await db.collection('userTokens')
         .where('userId', '==', userId)
         .get();
@@ -68,7 +93,6 @@ export async function sendReminders() {
       const tokens = tokensSnapshot.docs.map(doc => doc.id);
       console.log(`Found tokens for user ${userId}:`, tokens);
       
-      // 4. Send notification
       const message = {
         notification: {
           title: 'Task Reminder from Alliance',
@@ -77,30 +101,32 @@ export async function sendReminders() {
         tokens: tokens,
       };
 
-      const response = await messaging.sendEachForMulticast(message);
-      console.log('Successfully sent message to:', response.successCount, 'tokens');
-      
-      if (response.failureCount > 0) {
-        console.log('Failed to send to:', response.failureCount, 'tokens');
-        const tokensToDelete: Promise<any>[] = [];
-        response.responses.forEach((resp, idx) => {
-          if (!resp.success && resp.error) { // Check if resp.error exists
-            console.error(`Failure for token ${tokens[idx]}:`, resp.error);
-            // Check for the specific error indicating an invalid or unregistered token
-            if (
-              resp.error.code === 'messaging/invalid-registration-token' ||
-              resp.error.code === 'messaging/registration-token-not-registered'
-            ) {
-              const badToken = tokens[idx];
-              console.log(`Scheduling deletion for invalid token: ${badToken}`);
-              tokensToDelete.push(db.collection('userTokens').doc(badToken).delete());
+      try {
+        const response = await messaging.sendEachForMulticast(message);
+        console.log('Successfully sent message to:', response.successCount, 'tokens');
+        
+        if (response.failureCount > 0) {
+          console.log('Failed to send to:', response.failureCount, 'tokens');
+          const tokensToDelete: Promise<any>[] = [];
+          response.responses.forEach((resp, idx) => {
+            if (!resp.success && resp.error) { 
+              console.error(`Failure for token ${tokens[idx]}:`, resp.error.message);
+              // These error codes indicate that the token is invalid and should be deleted.
+              if (
+                resp.error.code === 'messaging/invalid-registration-token' ||
+                resp.error.code === 'messaging/registration-token-not-registered'
+              ) {
+                const badToken = tokens[idx];
+                console.log(`Scheduling deletion for invalid token: ${badToken}`);
+                tokensToDelete.push(db.collection('userTokens').doc(badToken).delete());
+              }
             }
-          }
-        });
-
-        // Wait for all invalid tokens to be deleted.
-        await Promise.all(tokensToDelete);
-        console.log(`Cleaned up ${tokensToDelete.length} invalid tokens.`);
+          });
+          await Promise.all(tokensToDelete);
+          console.log(`Cleaned up ${tokensToDelete.length} invalid tokens.`);
+        }
+      } catch (error) {
+          console.error('Error sending multicast message:', error);
       }
     }
   } catch (error) {

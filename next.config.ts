@@ -11,11 +11,37 @@ const withPwa = createNextPwa({
   workboxOptions: {
     disableDevLogs: true,
     runtimeCaching: [
+      // Cache pages with a NetworkFirst strategy.
       {
         urlPattern: ({ request }: { request: Request }) => request.mode === 'navigate',
-        handler: 'CacheFirst',
+        handler: 'NetworkFirst',
         options: {
           cacheName: 'pages',
+          expiration: {
+            maxEntries: 60,
+            maxAgeSeconds: 30 * 24 * 60 * 60, // 30 Days
+          },
+        },
+      },
+      // Cache scripts and styles with a StaleWhileRevalidate strategy.
+      {
+        urlPattern: ({ request }: { request: Request }) =>
+          request.destination === 'script' || request.destination === 'style',
+        handler: 'StaleWhileRevalidate',
+        options: {
+          cacheName: 'static-resources',
+          expiration: {
+            maxEntries: 60,
+            maxAgeSeconds: 30 * 24 * 60 * 60, // 30 Days
+          },
+        },
+      },
+      // Cache images with a CacheFirst strategy.
+      {
+        urlPattern: ({ request }: { request: Request }) => request.destination === 'image',
+        handler: 'CacheFirst',
+        options: {
+          cacheName: 'images',
           expiration: {
             maxEntries: 60,
             maxAgeSeconds: 30 * 24 * 60 * 60, // 30 Days

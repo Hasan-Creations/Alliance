@@ -1,31 +1,32 @@
 
 "use client";
 
-import { usePathname } from "next/navigation";
-import Link from "next/link";
+import { useContext } from "react";
 import {
   SidebarHeader,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarContent,
+  Sidebar,
 } from "@/components/ui/sidebar";
 import { AppLogo } from "@/components/app-logo";
 import { CheckSquare, Target, Wallet, Settings, LayoutDashboard } from "lucide-react";
+import { AppViewContext, type View } from "@/app/page";
 
-const menuItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/todos", label: "To-Do List", icon: CheckSquare },
-  { href: "/habits", label: "Habit Tracker", icon: Target },
-  { href: "/expenses", label: "Finance Tracker", icon: Wallet },
-  { href: "/settings", label: "Settings", icon: Settings },
+const menuItems: { href: View, label: string, icon: React.ElementType }[] = [
+  { href: "dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { href: "todos", label: "To-Do List", icon: CheckSquare },
+  { href: "habits", label: "Habit Tracker", icon: Target },
+  { href: "expenses", label: "Finance Tracker", icon: Wallet },
+  { href: "settings", label: "Settings", icon: Settings },
 ];
 
 export function MainNav() {
-  const pathname = usePathname();
+  const { view, setView } = useContext(AppViewContext);
 
   return (
-    <>
+    <Sidebar>
       <SidebarHeader>
         <AppLogo />
       </SidebarHeader>
@@ -34,19 +35,17 @@ export function MainNav() {
           {menuItems.map((item) => (
             <SidebarMenuItem key={item.href}>
               <SidebarMenuButton
-                asChild
-                isActive={pathname === item.href}
+                isActive={view === item.href}
                 tooltip={item.label}
+                onClick={() => setView(item.href)}
               >
-                <Link href={item.href}>
-                  <item.icon />
-                  <span>{item.label}</span>
-                </Link>
+                <item.icon />
+                <span>{item.label}</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           ))}
         </SidebarMenu>
       </SidebarContent>
-    </>
+    </Sidebar>
   );
 }

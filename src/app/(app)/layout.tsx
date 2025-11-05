@@ -1,15 +1,25 @@
 
 "use client";
 
-import type { ReactNode } from "react";
+import React, { type ReactNode } from "react";
 import { useSidebar, SidebarProvider, Sidebar } from "@/components/ui/sidebar";
 import { MainNav } from "@/components/main-nav";
 import { BottomNav } from "@/components/bottom-nav";
 import { useUser } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { FcmTokenManager } from "@/components/FcmTokenManager";
+
+export type View = 'dashboard' | 'todos' | 'habits' | 'expenses' | 'settings';
+
+export const AppViewContext = React.createContext<{
+  view: View;
+  setView: (view: View) => void;
+}>({
+  view: 'dashboard',
+  setView: () => {},
+});
 
 function AppLayoutContent({ children }: { children: ReactNode }) {
   const { isMobile } = useSidebar();
@@ -55,9 +65,13 @@ function AppLayoutContent({ children }: { children: ReactNode }) {
 }
 
 export default function AppLayout({ children }: { children: ReactNode }) {
+    const [view, setView] = useState<View>('dashboard');
+
   return (
     <SidebarProvider>
-      <AppLayoutContent>{children}</AppLayoutContent>
+        <AppViewContext.Provider value={{ view, setView }}>
+            <AppLayoutContent>{children}</AppLayoutContent>
+        </AppViewContext.Provider>
     </SidebarProvider>
   );
 }

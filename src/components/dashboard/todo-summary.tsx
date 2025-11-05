@@ -1,17 +1,17 @@
 
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useContext } from "react";
 import { PieChart, Pie, Cell, Tooltip } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import { Skeleton } from "@/components/ui/skeleton";
-import Link from 'next/link';
 import { Button } from '../ui/button';
 import { ArrowRight } from 'lucide-react';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from "@/firebase";
 import { collection } from "firebase/firestore";
 import type { Task } from "@/lib/types";
+import { AppViewContext } from "@/app/page";
 
 const chartConfig = {
   completed: {
@@ -25,6 +25,7 @@ const chartConfig = {
 };
 
 export function TodoSummary() {
+  const { setView } = useContext(AppViewContext);
   const { user } = useUser();
   const firestore = useFirestore();
   
@@ -82,8 +83,8 @@ export function TodoSummary() {
         {summaryData.totalTasks === 0 ? (
            <div className="flex h-32 flex-col items-center justify-center rounded-lg border-2 border-dashed text-center">
             <p className="text-muted-foreground mb-4">No tasks yet. Add one to get started!</p>
-             <Button asChild size="sm">
-                <Link href="/todos">Add Task</Link>
+             <Button size="sm" onClick={() => setView('todos')}>
+                Add Task
             </Button>
           </div>
         ) : (
@@ -116,10 +117,8 @@ export function TodoSummary() {
             </div>
           </div>
         )}
-         <Button asChild variant="link" className="px-0 mt-4">
-            <Link href="/todos">
-                Go to To-Do List <ArrowRight className="ml-2" />
-            </Link>
+         <Button variant="link" className="px-0 mt-4" onClick={() => setView('todos')}>
+            Go to To-Do List <ArrowRight className="ml-2" />
         </Button>
       </CardContent>
     </Card>

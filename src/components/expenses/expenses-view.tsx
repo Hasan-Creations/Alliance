@@ -169,9 +169,9 @@ export function ExpensesView() {
   }, [expenses]);
   
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-PK", {
       style: "currency",
-      currency: "USD",
+      currency: "PKR",
     }).format(value);
   }
 

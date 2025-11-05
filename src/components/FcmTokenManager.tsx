@@ -2,25 +2,36 @@
 'use client';
 
 import { useEffect } from 'react';
-import { getMessaging, getToken } from 'firebase/messaging';
+import { getMessaging, getToken, onMessage } from 'firebase/messaging';
 import { useFirebaseApp, useFirestore, useUser, setDocumentNonBlocking } from '@/firebase';
 import { doc } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
 
 export function FcmTokenManager() {
   const app = useFirebaseApp();
   const firestore = useFirestore();
   const { user } = useUser();
+  const { toast } = useToast();
 
   useEffect(() => {
-    const retrieveToken = async () => {
-      // Ensure all dependencies are available and we are in a browser environment
-      if (!app || !firestore || !user || typeof window === 'undefined' || !('serviceWorker' in navigator)) {
-        return;
-      }
+    // Ensure all dependencies are available and we are in a browser environment
+    if (!app || !firestore || !user || typeof window === 'undefined' || !('serviceWorker' in navigator)) {
+      return;
+    }
+      
+    const messaging = getMessaging(app);
 
+    // Handle foreground messages
+    const unsubscribeOnMessage = onMessage(messaging, (payload) => {
+        console.log('Foreground message received.', payload);
+        toast({
+          title: payload.notification?.title,
+          description: payload.notification?.body,
+        });
+    });
+    
+    const retrieveToken = async () => {
       try {
-        const messaging = getMessaging(app);
-        
         // 1. Request permission
         const permission = await Notification.requestPermission();
         if (permission === 'granted') {
@@ -53,7 +64,13 @@ export function FcmTokenManager() {
     };
 
     retrieveToken();
-  }, [app, firestore, user]); // Re-run when dependencies are ready
+    
+    // Cleanup function
+    return () => {
+      unsubscribeOnMessage();
+    };
+
+  }, [app, firestore, user, toast]); // Re-run when dependencies are ready
 
   return null; // This component does not render anything
 }

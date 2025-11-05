@@ -1,18 +1,19 @@
 
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useContext } from "react";
 import { format, subDays, startOfDay } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import Link from 'next/link';
 import { Button } from '../ui/button';
 import { ArrowRight, Check, X } from "lucide-react";
 import { useCollection, useFirestore, useUser, useMemoFirebase } from "@/firebase";
 import { collection } from "firebase/firestore";
 import type { Habit } from "@/lib/types";
+import { AppViewContext } from "@/app/page";
 
 export function HabitsSummary() {
+  const { setView } = useContext(AppViewContext);
   const { user } = useUser();
   const firestore = useFirestore();
 
@@ -92,8 +93,8 @@ export function HabitsSummary() {
         {!habits || habits.length === 0 ? (
           <div className="flex h-32 flex-col items-center justify-center rounded-lg border-2 border-dashed text-center">
             <p className="text-muted-foreground mb-4">No habits are being tracked.</p>
-            <Button asChild size="sm">
-                <Link href="/habits">Add a Habit</Link>
+            <Button size="sm" onClick={() => setView('habits')}>
+                Add a Habit
             </Button>
           </div>
         ) : (
@@ -115,10 +116,8 @@ export function HabitsSummary() {
                 </div>
             </div>
         )}
-        <Button asChild variant="link" className="px-0 mt-4">
-            <Link href="/habits">
-                Go to Habit Tracker <ArrowRight className="ml-2" />
-            </Link>
+        <Button variant="link" className="px-0 mt-4" onClick={() => setView('habits')}>
+            Go to Habit Tracker <ArrowRight className="ml-2" />
         </Button>
       </CardContent>
     </Card>

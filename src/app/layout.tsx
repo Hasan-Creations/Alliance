@@ -3,7 +3,7 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Toaster } from "@/components/ui/toaster";
 import './globals.css';
 import { cn } from '@/lib/utils';
-import { NotificationManager } from '@/components/NotificationManager';
+import { SidebarProvider } from '@/components/ui/sidebar';
 
 export const metadata: Metadata = {
   title: 'Alliance',
@@ -30,10 +30,9 @@ export default function RootLayout({
       </head>
       <body className={cn("font-body antialiased", "overflow-x-hidden")}>
         <FirebaseClientProvider>
-          <>
-            <NotificationManager />
+          <SidebarProvider>
             {children}
-          </>
+          </SidebarProvider>
         </FirebaseClientProvider>
         <Toaster />
       </body>

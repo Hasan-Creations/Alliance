@@ -1,43 +1,38 @@
 
 'use client';
 
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { useUser, useDoc, useFirestore, useMemoFirebase } from '@/firebase';
+import React, { type ReactNode, useState, useContext } from "react";
+import { useSidebar, SidebarProvider } from "@/components/ui/sidebar";
+import { MainNav } from "@/components/main-nav";
+import { BottomNav } from "@/components/bottom-nav";
+import { useUser } from "@/firebase";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
+import { useEffect } from "react";
+import { FcmTokenManager } from "@/components/FcmTokenManager";
+import { DashboardView } from '@/components/dashboard/dashboard-view';
+import { TodoView } from '@/components/todos/todo-view';
+import { HabitsView } from '@/components/habits/habits-view';
+import { FinanceView } from '@/components/finance/finance-view';
+import { SettingsView } from '@/components/settings/settings-view';
 import WelcomePage from "./welcome/page";
-import { Loader2 } from 'lucide-react';
-import { doc } from 'firebase/firestore';
-import type { UserStartupSettings } from "@/lib/types";
 
+export type View = 'dashboard' | 'todos' | 'habits' | 'expenses' | 'settings';
 
-export default function RootRedirect() {
+export const AppViewContext = React.createContext<{
+  view: View;
+  setView: (view: View) => void;
+}>({
+  view: 'dashboard',
+  setView: () => {},
+});
+
+export default function AppPage() {
   const { user, isUserLoading } = useUser();
-  const router = useRouter();
-  const firestore = useFirestore();
-
-  const settingsRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return doc(firestore, 'users', user.uid, 'settings', 'startup');
-  }, [firestore, user]);
-
-  const { data: startupSettings, isLoading: isLoadingSettings } = useDoc<UserStartupSettings>(settingsRef);
-
-  useEffect(() => {
-    // Wait until both user and their settings have finished loading
-    if (!isUserLoading && !isLoadingSettings) {
-      if (user) {
-        // If the user is logged in, redirect them to their chosen startup page.
-        // Default to /dashboard if no setting is saved.
-        const startupPage = startupSettings?.startupPage || '/dashboard';
-        router.replace(startupPage);
-      }
-      // If there's no user, the page will proceed to render the WelcomePage.
-    }
-  }, [user, isUserLoading, startupSettings, isLoadingSettings, router]);
-
-  // Show a loading spinner while checking auth state or settings.
-  // Or if a user exists and we are waiting for the redirect to happen.
-  if (isUserLoading || isLoadingSettings || user) {
+  const [view, setView] = useState<View>('dashboard');
+  const { isMobile } = useSidebar();
+  
+  if (isUserLoading) {
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
@@ -47,7 +42,40 @@ export default function RootRedirect() {
       </div>
     );
   }
+
+  if (!user) {
+    return <WelcomePage />;
+  }
   
-  // If not loading and no user, show the public-facing welcome page.
-  return <WelcomePage />;
+  const renderView = () => {
+    switch (view) {
+      case 'dashboard':
+        return <DashboardView />;
+      case 'todos':
+        return <TodoView />;
+      case 'habits':
+        return <HabitsView />;
+      case 'expenses':
+        return <FinanceView />;
+      case 'settings':
+        return <SettingsView />;
+      default:
+        return <DashboardView />;
+    }
+  };
+
+  return (
+    <AppViewContext.Provider value={{ view, setView }}>
+       <div className="flex min-h-screen w-full">
+        <FcmTokenManager />
+        <MainNav />
+        <main className="flex-1 flex flex-col bg-background w-full">
+          <div className="flex-1 py-4 sm:py-6 lg:py-8 pb-24 md:pb-8">
+            {renderView()}
+          </div>
+        </main>
+        {isMobile && <BottomNav />}
+      </div>
+    </AppViewContext.Provider>
+  );
 }

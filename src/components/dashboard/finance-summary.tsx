@@ -1,19 +1,19 @@
 
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useContext } from "react";
 import { format, startOfMonth, isSameMonth, parseISO } from "date-fns";
 import { toZonedTime } from 'date-fns-tz';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import { Skeleton } from "@/components/ui/skeleton";
-import Link from 'next/link';
 import { Button } from '../ui/button';
 import { ArrowRight } from 'lucide-react';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from "@/firebase";
 import { collection } from "firebase/firestore";
 import type { Expense, Income } from "@/lib/types";
+import { AppViewContext } from "@/app/page";
 
 const chartConfig = {
   value: {
@@ -30,6 +30,7 @@ const chartConfig = {
 };
 
 export function FinanceSummary() {
+  const { setView } = useContext(AppViewContext);
   const { user } = useUser();
   const firestore = useFirestore();
 
@@ -65,9 +66,9 @@ export function FinanceSummary() {
   }, [expenses, incomes]);
   
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-PK", {
       style: "currency",
-      currency: "USD",
+      currency: "PKR",
     }).format(value);
   }
 
@@ -95,8 +96,8 @@ export function FinanceSummary() {
          {monthlyData.totalIncome === 0 && monthlyData.totalExpenses === 0 ? (
           <div className="flex h-48 flex-col items-center justify-center rounded-lg border-2 border-dashed text-center">
             <p className="text-muted-foreground mb-4">No financial data for this month.</p>
-            <Button asChild size="sm">
-                <Link href="/expenses">Add Transaction</Link>
+            <Button size="sm" onClick={() => setView('expenses')}>
+                Add Transaction
             </Button>
           </div>
         ) : (
@@ -118,10 +119,8 @@ export function FinanceSummary() {
             </BarChart>
           </ChartContainer>
         )}
-         <Button asChild variant="link" className="px-0 mt-4">
-            <Link href="/expenses">
-                Go to Finance Tracker <ArrowRight className="ml-2" />
-            </Link>
+         <Button variant="link" className="px-0 mt-4" onClick={() => setView('expenses')}>
+            Go to Finance Tracker <ArrowRight className="ml-2" />
         </Button>
       </CardContent>
     </Card>

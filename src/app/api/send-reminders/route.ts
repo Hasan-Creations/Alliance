@@ -3,13 +3,13 @@ import { sendReminders } from '@/ai/flows/send-reminders-flow';
 import {NextRequest, NextResponse} from 'next/server';
 
 export const GET = async (req: NextRequest) => {
-    // In production, secure the endpoint to be triggered only by Vercel Cron Jobs
+    // In production, secure the endpoint to be triggered only by Vercel Cron Jobs.
     // In development, allow requests without a secret for easy testing.
-    // if (process.env.NODE_ENV === 'production') {
-    //     if (req.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
-    //         return new NextResponse('Unauthorized', { status: 401 });
-    //     }
-    // }
+    if (process.env.NODE_ENV === 'production') {
+        if (req.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
+            return new NextResponse('Unauthorized', { status: 401 });
+        }
+    }
 
     try {
         await sendReminders();

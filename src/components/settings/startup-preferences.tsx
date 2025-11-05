@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useContext } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -9,21 +9,23 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useUser, useFirestore, useDoc, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import type { UserStartupSettings } from '@/lib/types';
+import { AppViewContext, type View } from '@/app/page';
 
 const defaultSettings: UserStartupSettings = {
-  startupPage: '/dashboard',
+  startupPage: 'dashboard',
 };
 
-const startupOptions = [
-  { value: '/dashboard', label: 'Dashboard' },
-  { value: '/todos', label: 'To-Do List' },
-  { value: '/habits', label: 'Habit Tracker' },
-  { value: '/expenses', label: 'Finance Tracker' },
+const startupOptions: { value: View, label: string }[] = [
+  { value: 'dashboard', label: 'Dashboard' },
+  { value: 'todos', label: 'To-Do List' },
+  { value: 'habits', label: 'Habit Tracker' },
+  { value: 'expenses', label: 'Finance Tracker' },
 ];
 
 export function StartupPreferences() {
   const { user } = useUser();
   const firestore = useFirestore();
+  const { setView } = useContext(AppViewContext);
 
   const settingsRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -31,25 +33,25 @@ export function StartupPreferences() {
   }, [firestore, user]);
 
   const { data: settings, isLoading } = useDoc<UserStartupSettings>(settingsRef);
-  const [localSettings, setLocalSettings] = useState<UserStartupSettings | null>(null);
+  
+  const [selectedPage, setSelectedPage] = useState<View>('dashboard');
 
   useEffect(() => {
     if (settings) {
-      setLocalSettings(settings);
+      setSelectedPage(settings.startupPage as View);
     } else if (!isLoading) {
-      setLocalSettings(defaultSettings);
+      setSelectedPage(defaultSettings.startupPage as View);
     }
   }, [settings, isLoading]);
 
   const handleSelectChange = (value: string) => {
-    if (!settingsRef || !localSettings) return;
-
-    const newSettings = { ...localSettings, startupPage: value };
-    setLocalSettings(newSettings);
-    setDocumentNonBlocking(settingsRef, newSettings, { merge: true });
+    if (!settingsRef) return;
+    const newStartupPage = value as View;
+    setSelectedPage(newStartupPage);
+    setDocumentNonBlocking(settingsRef, { startupPage: newStartupPage }, { merge: true });
   };
   
-  if (isLoading || !localSettings) {
+  if (isLoading) {
     return (
       <Card>
         <CardHeader>
@@ -73,7 +75,7 @@ export function StartupPreferences() {
       </CardHeader>
       <CardContent className="space-y-2">
         <Label htmlFor="startup-page">Default Startup Page</Label>
-        <Select value={localSettings.startupPage} onValueChange={handleSelectChange}>
+        <Select value={selectedPage} onValueChange={handleSelectChange}>
           <SelectTrigger id="startup-page">
             <SelectValue placeholder="Select a page" />
           </SelectTrigger>

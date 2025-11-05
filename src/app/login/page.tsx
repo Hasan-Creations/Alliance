@@ -38,7 +38,6 @@ export default function LoginPage() {
 
   useEffect(() => {
     // If the user is logged in, redirect them to the main router page.
-    // The router page will handle redirecting to their preferred startup page.
     if (!isUserLoading && user) {
       router.replace('/'); 
     }

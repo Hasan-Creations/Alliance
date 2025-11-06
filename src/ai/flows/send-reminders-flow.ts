@@ -7,6 +7,7 @@
 
 import * as admin from 'firebase-admin';
 import { format } from 'date-fns';
+import type { NextRequest } from 'next/server';
 
 // Helper function to initialize Firebase Admin SDK. It's idempotent.
 function initializeFirebaseAdmin() {
@@ -43,19 +44,33 @@ function initializeFirebaseAdmin() {
   }
 }
 
-export async function sendReminders() {
-  // Attempt to initialize Firebase Admin. If it fails, stop execution.
+export async function sendReminders(req: NextRequest) {
+  // This function is designed to run only in production via Vercel Cron Jobs.
+  // In development, it will exit gracefully without erroring.
+  if (process.env.NODE_ENV !== 'production') {
+    console.log('[sendReminders] Skipping reminder check in development environment.');
+    return;
+  }
+
+  // --- Authorization Check ---
+  const cronSecret = process.env.CRON_SECRET;
+  if (!cronSecret) {
+      console.error('[send-reminders] CRITICAL: CRON_SECRET environment variable is not set. The endpoint cannot be secured.');
+      throw new Error('Configuration error: Cron secret not set on server.');
+  }
+  if (req.headers.get('authorization') !== `Bearer ${cronSecret}`) {
+      throw new Error('Unauthorized');
+  }
+
+  // --- Firebase Initialization ---
   if (!initializeFirebaseAdmin()) {
-    // A detailed error is already logged by the function above.
     throw new Error("Firebase Admin SDK initialization failed. Check server logs for details.");
   }
 
-  // Get Firestore and Messaging instances AFTER initialization.
   const db = admin.firestore();
   const messaging = admin.messaging();
-
-  console.log('Starting to send reminders...');
   const todayStr = format(new Date(), 'yyyy-MM-dd');
+  console.log('Starting to send reminders...');
 
   try {
     const usersSnapshot = await db.collection('users').get();
@@ -111,7 +126,6 @@ export async function sendReminders() {
           response.responses.forEach((resp, idx) => {
             if (!resp.success && resp.error) { 
               console.error(`Failure for token ${tokens[idx]}:`, resp.error.message);
-              // These error codes indicate that the token is invalid and should be deleted.
               if (
                 resp.error.code === 'messaging/invalid-registration-token' ||
                 resp.error.code === 'messaging/registration-token-not-registered'
@@ -131,7 +145,6 @@ export async function sendReminders() {
     }
   } catch (error) {
     console.error('Error in sendReminders flow:', error);
-    // Re-throw the error to be caught by the API route handler
     throw new Error('Failed to execute sendReminders flow.');
   }
 }

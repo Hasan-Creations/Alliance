@@ -10,16 +10,16 @@ import { format } from 'date-fns';
 
 // Helper function to initialize Firebase Admin SDK. It's idempotent.
 function initializeFirebaseAdmin() {
+  // Check for the critical environment variable first.
+  const serviceAccountString = process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
+  if (!serviceAccountString) {
+    console.error('[sendReminders] CRITICAL: FIREBASE_SERVICE_ACCOUNT_KEY environment variable is not set. The server cannot authenticate with Firebase.');
+    return false;
+  }
+
   // If already initialized, do nothing.
   if (admin.apps.length > 0) {
     return true;
-  }
-
-  // Check for both possible environment variable names.
-  const serviceAccountString = process.env.FIREBASE_ADMIN_SERVICE_ACCOUNT || process.env.FIREBASE_SERVICE_ACCOUNT_KEY;
-  if (!serviceAccountString) {
-    console.error('[sendReminders] CRITICAL: FIREBASE_ADMIN_SERVICE_ACCOUNT or FIREBASE_SERVICE_ACCOUNT_KEY environment variable is not set. The server cannot authenticate with Firebase.');
-    return false;
   }
 
   try {
@@ -38,7 +38,7 @@ function initializeFirebaseAdmin() {
     console.log('[sendReminders] Firebase Admin SDK initialized successfully.');
     return true;
   } catch (e: any) {
-    console.error('[sendReminders] CRITICAL: Failed to parse FIREBASE_ADMIN_SERVICE_ACCOUNT or initialize Firebase Admin SDK. Please check your service account credentials.', e.message);
+    console.error('[sendReminders] CRITICAL: Failed to parse FIREBASE_SERVICE_ACCOUNT_KEY or initialize Firebase Admin SDK. Please check your service account credentials.', e.message);
     return false;
   }
 }

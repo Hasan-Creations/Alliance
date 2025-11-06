@@ -4,9 +4,14 @@ import {NextRequest, NextResponse} from 'next/server';
 
 export const GET = async (req: NextRequest) => {
     // In production, secure the endpoint to be triggered only by Vercel Cron Jobs.
-    // In development, allow requests without a secret for easy testing.
     if (process.env.NODE_ENV === 'production') {
-        if (req.headers.get('authorization') !== `Bearer ${process.env.CRON_SECRET}`) {
+        const cronSecret = process.env.CRON_SECRET;
+        if (!cronSecret) {
+            console.error('[send-reminders] CRITICAL: CRON_SECRET environment variable is not set. The endpoint cannot be secured.');
+            return new NextResponse('Configuration error: Cron secret not set.', { status: 500 });
+        }
+
+        if (req.headers.get('authorization') !== `Bearer ${cronSecret}`) {
             return new NextResponse('Unauthorized', { status: 401 });
         }
     }

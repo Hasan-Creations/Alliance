@@ -53,6 +53,7 @@ export async function sendReminders(req: NextRequest) {
   }
 
   // --- Authorization Check ---
+  // This is a secondary check. The primary check is now in the API route handler.
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret) {
       console.error('[send-reminders] CRITICAL: CRON_SECRET environment variable is not set. The endpoint cannot be secured.');

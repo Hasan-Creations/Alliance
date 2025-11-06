@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useEffect, useState, useContext } from 'react';
+import { useEffect, useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -9,7 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useUser, useFirestore, useDoc, useMemoFirebase, setDocumentNonBlocking } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import type { UserStartupSettings } from '@/lib/types';
-import { AppViewContext, type View } from '@/context/app-view-context';
+import type { View } from '@/context/app-view-context';
 
 const defaultSettings: UserStartupSettings = {
   startupPage: 'dashboard',
@@ -25,7 +25,6 @@ const startupOptions: { value: View, label: string }[] = [
 export function StartupPreferences() {
   const { user } = useUser();
   const firestore = useFirestore();
-  const { setView } = useContext(AppViewContext);
 
   const settingsRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -70,14 +69,14 @@ export function StartupPreferences() {
       <CardHeader>
         <CardTitle>Startup Preferences</CardTitle>
         <CardDescription>
-          Choose which page you want to see when you open the app.
+          Choose which view you want to see when you open the app.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-2">
-        <Label htmlFor="startup-page">Default Startup Page</Label>
+        <Label htmlFor="startup-page">Default Startup View</Label>
         <Select value={selectedPage} onValueChange={handleSelectChange}>
           <SelectTrigger id="startup-page">
-            <SelectValue placeholder="Select a page" />
+            <SelectValue placeholder="Select a view" />
           </SelectTrigger>
           <SelectContent>
             {startupOptions.map(option => (

@@ -49,12 +49,6 @@ export interface UserStartupSettings {
     startupPage: string;
 }
 
-
-export interface AppData {
-  tasks: Task[];
-  habits: Habit[];
-  accounts: Account[];
-  transactions: Transaction[];
-  transactionCategories: TransactionCategory[];
-  settings: UserSettings;
+export interface UserSettings {
+    startup: UserStartupSettings;
 }

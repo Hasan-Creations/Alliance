@@ -7,6 +7,7 @@ import { useAuth, useUser } from '@/firebase';
 import { LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { StartupPreferences } from './startup-preferences';
+import { DataExporter } from './data-exporter';
 
 export function SettingsView() {
   const auth = useAuth();
@@ -49,6 +50,8 @@ export function SettingsView() {
       </Card>
 
       <StartupPreferences />
+
+      <DataExporter />
     </div>
   );
 }

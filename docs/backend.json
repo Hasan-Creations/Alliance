@@ -87,39 +87,71 @@
         "completions"
       ]
     },
-    "Expense": {
-      "title": "Expense",
+    "Account": {
+      "title": "Account",
+      "description": "Represents a user's financial account (e.g., Cash, Bank).",
       "type": "object",
-      "description": "Represents an expense record.",
       "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the account."
+        },
+        "balance": {
+          "type": "number",
+          "description": "Current balance of the account."
+        }
+      },
+      "required": [
+        "name",
+        "balance"
+      ]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Represents a single financial transaction, which can be an income or an expense.",
+      "type": "object",
+      "properties": {
+        "accountId": {
+          "type": "string",
+          "description": "The ID of the account this transaction belongs to."
+        },
         "date": {
           "type": "string",
           "format": "date",
-          "description": "Date of the expense."
+          "description": "Date of the transaction."
         },
         "amount": {
           "type": "number",
-          "description": "Amount of the expense."
+          "description": "Absolute amount of the transaction."
         },
         "description": {
           "type": "string",
-          "description": "Description of the expense."
+          "description": "Description of the transaction."
         },
         "category": {
           "type": "string",
-          "description": "Category of the expense."
+          "description": "Category of the transaction."
         },
         "type": {
+          "type": "string",
+          "enum": [
+            "income",
+            "expense"
+          ],
+          "description": "Type of the transaction (credit or debit)."
+        },
+        "subType": {
           "type": "string",
           "enum": [
             "Need",
             "Want",
             "Savings"
           ],
-          "description": "Type of the expense."
+          "description": "Optional subtype for expenses."
         }
       },
       "required": [
+        "accountId",
         "date",
         "amount",
         "description",
@@ -127,44 +159,27 @@
         "type"
       ]
     },
-    "Income": {
-      "title": "Income",
-      "description": "Represents an income record.",
-      "type": "object",
-      "properties": {
-        "date": {
-          "type": "string",
-          "format": "date"
-        },
-        "amount": {
-          "type": "number"
-        },
-        "description": {
-          "type": "string"
-        },
-        "category": {
-          "type": "string"
-        }
-      },
-      "required": [
-        "date",
-        "amount",
-        "description",
-        "category"
-      ]
-    },
-    "Category": {
-      "title": "Category",
-      "description": "Represents a user-defined category for income or expenses.",
+    "TransactionCategory": {
+      "title": "Transaction Category",
+      "description": "Represents a user-defined category for transactions.",
       "type": "object",
       "properties": {
         "name": {
           "type": "string",
           "description": "The name of the category."
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "income",
+            "expense"
+          ],
+          "description": "The type of transaction this category applies to."
         }
       },
       "required": [
-        "name"
+        "name",
+        "type"
       ]
     },
     "UserSettings": {
@@ -172,28 +187,6 @@
       "description": "Stores user-specific application settings.",
       "type": "object",
       "properties": {
-        "notifications": {
-          "type": "object",
-          "description": "Notification preferences.",
-          "properties": {
-            "dailySummary": {
-              "type": "boolean",
-              "description": "Enable daily summary notifications."
-            },
-            "taskReminders": {
-              "type": "boolean",
-              "description": "Enable task reminder notifications."
-            },
-            "overdueAlerts": {
-              "type": "boolean",
-              "description": "Enable overdue task alert notifications."
-            },
-            "motivationalMessages": {
-              "type": "boolean",
-              "description": "Enable motivational message notifications."
-            }
-          }
-        },
         "startup": {
           "type": "object",
           "description": "Startup preferences.",
@@ -205,26 +198,6 @@
           }
         }
       }
-    },
-    "FCMToken": {
-      "title": "FCM Token",
-      "description": "Represents a Firebase Cloud Messaging token for a user's device.",
-      "type": "object",
-      "properties": {
-        "userId": {
-          "type": "string",
-          "description": "The ID of the user this token belongs to."
-        },
-        "createdAt": {
-          "type": "string",
-          "format": "date-time",
-          "description": "The timestamp when the token was created."
-        }
-      },
-      "required": [
-        "userId",
-        "createdAt"
-      ]
     }
   },
   "auth": {
@@ -251,47 +224,29 @@
       },
       "description": "Stores habit data for a specific user."
     },
-    "/users/{userId}/expenses/{expenseId}": {
+    "/users/{userId}/accounts/{accountId}": {
       "schema": {
-        "$ref": "#/entities/Expense"
+        "$ref": "#/entities/Account"
       },
-      "description": "Stores expense data for a specific user."
+      "description": "Stores financial accounts for a specific user."
     },
-    "/users/{userId}/incomes/{incomeId}": {
+    "/users/{userId}/transactions/{transactionId}": {
       "schema": {
-        "$ref": "#/entities/Income"
+        "$ref": "#/entities/Transaction"
       },
-      "description": "Stores income data for a specific user."
+      "description": "Stores all financial transactions for a specific user."
     },
-    "/users/{userId}/expenseCategories/{categoryId}": {
+    "/users/{userId}/transactionCategories/{categoryId}": {
       "schema": {
-        "$ref": "#/entities/Category"
+        "$ref": "#/entities/TransactionCategory"
       },
-      "description": "Stores user-defined categories for expenses."
-    },
-    "/users/{userId}/incomeCategories/{categoryId}": {
-      "schema": {
-        "$ref": "#/entities/Category"
-      },
-      "description": "Stores user-defined categories for income."
-    },
-    "/users/{userId}/settings/notifications": {
-      "schema": {
-        "$ref": "#/entities/UserSettings/properties/notifications"
-      },
-      "description": "Stores notification preferences for a specific user."
+      "description": "Stores user-defined categories for transactions."
     },
     "/users/{userId}/settings/startup": {
       "schema": {
         "$ref": "#/entities/UserSettings/properties/startup"
       },
       "description": "Stores startup preferences for a specific user."
-    },
-    "/userTokens/{tokenId}": {
-      "schema": {
-        "$ref": "#/entities/FCMToken"
-      },
-      "description": "Stores FCM tokens for push notifications, with the token as the document ID."
     }
   }
 }

@@ -56,7 +56,7 @@ import * as z from "zod";
 import { format, parseISO } from "date-fns";
 import { toZonedTime } from 'date-fns-tz';
 import { CalendarIcon, Plus, Trash2, PlusCircle, MinusCircle, ArrowRightLeft } from "lucide-react";
-import type { Account, Transaction, TransactionCategory, TransactionType } from "@/lib/types";
+import type { Account, Transaction, TransactionCategory, ExpenseType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useCollection, useFirestore, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase";
 import { collection, doc, increment } from "firebase/firestore";
@@ -224,18 +224,30 @@ export function TransactionsView() {
   
   const openNewTransactionDialog = () => {
     const cashInHandAccount = accounts?.find(a => a.name === 'Cash in Hand');
-    const defaultAccountId = cashInHandAccount?.id ?? (accounts && accounts.length > 0 ? accounts[0].id : "");
+    const savingsAccount = accounts?.find(a => a.name === 'Savings Account');
     
+    const currentType = form.getValues('type');
+
     form.reset({
       description: "",
       amount: 0,
-      accountId: defaultAccountId,
-      toAccountId: "",
       category: "Other",
       type: "expense",
       subType: "Need",
       date: new Date(),
+      accountId: cashInHandAccount?.id ?? (accounts && accounts.length > 0 ? accounts[0].id : ""),
+      toAccountId: savingsAccount?.id ?? "",
     });
+    
+    // Set defaults based on type
+    const newType = form.getValues('type');
+    if (newType === 'transfer') {
+        form.setValue('accountId', cashInHandAccount?.id ?? '');
+        form.setValue('toAccountId', savingsAccount?.id ?? '');
+    } else {
+        form.setValue('accountId', cashInHandAccount?.id ?? (accounts?.[0]?.id || ''));
+    }
+
     setIsFormOpen(true);
   };
   

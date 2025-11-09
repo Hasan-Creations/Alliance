@@ -2,8 +2,7 @@
 "use client";
 
 import { useMemo, useContext } from "react";
-import { format, startOfMonth, isSameMonth, parseISO } from "date-fns";
-import { toZonedTime } from 'date-fns-tz';
+import { format, isSameMonth } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from "recharts";
 import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
@@ -12,8 +11,9 @@ import { Button } from '../ui/button';
 import { ArrowRight } from 'lucide-react';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from "@/firebase";
 import { collection } from "firebase/firestore";
-import type { Expense, Income } from "@/lib/types";
+import type { Transaction } from "@/lib/types";
 import { AppViewContext } from "@/context/app-view-context";
+import { parseISO } from "date-fns";
 
 const chartConfig = {
   value: {
@@ -23,7 +23,7 @@ const chartConfig = {
     label: "Income",
     color: "hsl(var(--chart-2))",
   },
-  expenses: {
+  expense: {
     label: "Expenses",
     color: "hsl(var(--chart-1))",
   },
@@ -34,36 +34,33 @@ export function FinanceSummary() {
   const { user } = useUser();
   const firestore = useFirestore();
 
-  const expensesRef = useMemoFirebase(() => {
+  const transactionsRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return collection(firestore, 'users', user.uid, 'expenses');
+    return collection(firestore, 'users', user.uid, 'transactions');
   }, [firestore, user]);
-  const { data: expenses, isLoading: isLoadingExpenses } = useCollection<Expense>(expensesRef);
-
-  const incomesRef = useMemoFirebase(() => {
-    if (!firestore || !user) return null;
-    return collection(firestore, 'users', user.uid, 'incomes');
-  }, [firestore, user]);
-  const { data: incomes, isLoading: isLoadingIncomes } = useCollection<Income>(incomesRef);
-
+  const { data: transactions, isLoading: isLoadingTransactions } = useCollection<Transaction>(transactionsRef);
 
   const monthlyData = useMemo(() => {
-    if (!incomes || !expenses) return { totalIncome: 0, totalExpenses: 0, chartData: [] };
+    if (!transactions) return { totalIncome: 0, totalExpenses: 0, chartData: [] };
     const currentMonth = new Date();
 
-    const monthlyIncomes = incomes.filter(i => isSameMonth(parseISO(i.date), currentMonth));
-    const monthlyExpenses = expenses.filter(e => isSameMonth(parseISO(e.date), currentMonth));
+    const monthlyTransactions = transactions.filter(t => isSameMonth(parseISO(t.date), currentMonth));
 
-    const totalIncome = monthlyIncomes.reduce((acc, i) => acc + i.amount, 0);
-    const totalExpenses = monthlyExpenses.reduce((acc, e) => acc + e.amount, 0);
+    const totalIncome = monthlyTransactions
+      .filter(t => t.type === 'income')
+      .reduce((acc, t) => acc + t.amount, 0);
+
+    const totalExpenses = monthlyTransactions
+      .filter(t => t.type === 'expense')
+      .reduce((acc, t) => acc + t.amount, 0);
 
     const chartData = [
       { name: "Income", value: totalIncome, fill: "var(--color-income)" },
-      { name: "Expenses", value: totalExpenses, fill: "var(--color-expenses)" },
+      { name: "Expenses", value: totalExpenses, fill: "var(--color-expense)" },
     ];
 
     return { totalIncome, totalExpenses, chartData };
-  }, [expenses, incomes]);
+  }, [transactions]);
   
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-PK", {
@@ -72,7 +69,7 @@ export function FinanceSummary() {
     }).format(value);
   }
 
-  if (isLoadingExpenses || isLoadingIncomes) {
+  if (isLoadingTransactions) {
     return (
         <Card>
             <CardHeader>

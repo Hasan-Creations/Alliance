@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useAuth, useUser } from '@/firebase';
 import { LogOut } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { NotificationPreferences } from './notification-preferences';
 import { StartupPreferences } from './startup-preferences';
 
 export function SettingsView() {
@@ -50,7 +49,6 @@ export function SettingsView() {
       </Card>
 
       <StartupPreferences />
-      <NotificationPreferences />
     </div>
   );
 }

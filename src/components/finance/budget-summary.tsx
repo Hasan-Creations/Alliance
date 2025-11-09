@@ -3,7 +3,7 @@
 
 import * as React from "react"
 import { useMemo } from "react"
-import { TrendingUp, CheckCircle, ShoppingCart, PiggyBank, ChevronLeft, ChevronRight } from "lucide-react"
+import { TrendingUp, CheckCircle, ShoppingCart, PiggyBank, ChevronLeft, ChevronRight, Wallet } from "lucide-react"
 import { Pie, PieChart } from "recharts"
 
 import {
@@ -19,13 +19,13 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart"
-import { DonutChart, Donut, DonutLabel } from "@/components/ui/donut-chart"
+import { DonutLabel } from "@/components/ui/donut-chart"
 import { format, startOfMonth, isSameMonth, subMonths, addMonths, parseISO } from "date-fns"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { useCollection, useFirestore, useUser, useMemoFirebase } from "@/firebase";
 import { collection } from "firebase/firestore";
-import type { Expense, Income } from "@/lib/types";
+import type { Account, Transaction } from "@/lib/types";
 
 const chartConfig = {
   amount: {
@@ -41,60 +41,63 @@ const chartConfig = {
     color: "hsl(var(--chart-2))",
     icon: ShoppingCart,
   },
-  Savings: {
-    label: "Savings",
-    color: "hsl(var(--chart-3))",
-    icon: PiggyBank,
-  },
 };
 
 export function BudgetSummary() {
   const { user } = useUser();
   const firestore = useFirestore();
 
-  const expensesRef = useMemoFirebase(() => {
+  const accountsRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return collection(firestore, 'users', user.uid, 'expenses');
+    return collection(firestore, 'users', user.uid, 'accounts');
   }, [firestore, user]);
-  const { data: expenses, isLoading: isLoadingExpenses } = useCollection<Expense>(expensesRef);
+  const { data: accounts } = useCollection<Account>(accountsRef);
 
-  const incomesRef = useMemoFirebase(() => {
+  const transactionsRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
-    return collection(firestore, 'users', user.uid, 'incomes');
+    return collection(firestore, 'users', user.uid, 'transactions');
   }, [firestore, user]);
-  const { data: incomes, isLoading: isLoadingIncomes } = useCollection<Income>(incomesRef);
-
+  const { data: transactions, isLoading: isLoadingTransactions } = useCollection<Transaction>(transactionsRef);
 
   const [activeMonth, setActiveMonth] = React.useState(startOfMonth(new Date()))
 
   const monthlyData = useMemo(() => {
-    if (!incomes || !expenses) return { totalIncome: 0, needsTotal: 0, wantsTotal: 0, savingsTotal: 0, remaining: 0, chartData: [], totalSpending: 0, totalAllocated: 0 };
+    if (!transactions || !accounts) return { totalIncome: 0, needsTotal: 0, wantsTotal: 0, savingsTotal: 0, netBalance: 0, chartData: [], totalSpending: 0 };
 
-    const monthlyIncomes = incomes.filter(i => isSameMonth(parseISO(i.date), activeMonth));
-    const monthlyExpenses = expenses.filter(e => isSameMonth(parseISO(e.date), activeMonth));
+    const monthlyTransactions = transactions.filter(t => isSameMonth(parseISO(t.date), activeMonth));
+    const savingsAccount = accounts.find(a => a.name === 'Savings Account');
+    
+    const totalIncome = monthlyTransactions
+      .filter(t => t.type === 'income')
+      .reduce((acc, t) => acc + t.amount, 0);
+      
+    const expenses = monthlyTransactions.filter(t => t.type === 'expense');
 
-    const totalIncome = monthlyIncomes.reduce((acc, i) => acc + i.amount, 0);
+    const needsTotal = expenses.filter(e => e.subType === 'Need').reduce((acc, e) => acc + e.amount, 0);
+    const wantsTotal = expenses.filter(e => e.subType === 'Want').reduce((acc, e) => acc + e.amount, 0);
+    
+    const savingsInflow = monthlyTransactions
+      .filter(t => t.type === 'transfer' && t.toAccountId === savingsAccount?.id)
+      .reduce((acc, t) => acc + t.amount, 0);
 
-    const needsTotal = monthlyExpenses.filter(e => e.type === 'Need').reduce((acc, e) => acc + e.amount, 0);
-    const wantsTotal = monthlyExpenses.filter(e => e.type === 'Want').reduce((acc, e) => acc + e.amount, 0);
-    const savingsTotal = monthlyExpenses.filter(e => e.type === 'Savings').reduce((acc, e) => acc + e.amount, 0);
+    const savingsOutflow = monthlyTransactions
+      .filter(t => t.accountId === savingsAccount?.id && (t.type === 'expense' || t.type === 'transfer'))
+      .reduce((acc, t) => acc + t.amount, 0);
+
+    const savingsTotal = savingsInflow - savingsOutflow;
 
     const totalSpending = needsTotal + wantsTotal;
-    const totalAllocated = needsTotal + wantsTotal + savingsTotal;
-
-    const remaining = totalIncome - totalAllocated;
+    const netBalance = totalIncome - totalSpending - savingsTotal;
 
     const chartData = [
       { type: "Needs", amount: needsTotal, fill: "var(--color-Needs)" },
       { type: "Wants", amount: wantsTotal, fill: "var(--color-Wants)" },
-      { type: "Savings", amount: savingsTotal, fill: "var(--color-Savings)" },
     ].filter(d => d.amount > 0);
 
-    return { totalIncome, needsTotal, wantsTotal, savingsTotal, remaining, chartData, totalSpending, totalAllocated };
-  }, [expenses, incomes, activeMonth]);
+    return { totalIncome, needsTotal, wantsTotal, savingsTotal, netBalance, chartData, totalSpending };
+  }, [transactions, activeMonth, accounts]);
 
-  const { totalIncome, remaining, chartData, totalSpending, totalAllocated } = monthlyData;
-
+  const { totalIncome, netBalance, chartData, totalSpending, wantsTotal, needsTotal, savingsTotal } = monthlyData;
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-PK", {
@@ -111,8 +114,7 @@ export function BudgetSummary() {
     setActiveMonth(prev => addMonths(prev, 1));
   };
 
-
-  if (isLoadingExpenses || isLoadingIncomes) {
+  if (isLoadingTransactions) {
     return (
       <Card>
         <CardHeader>
@@ -126,7 +128,6 @@ export function BudgetSummary() {
           <div className="grid gap-4">
             <Skeleton className="h-24 w-full" />
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <Skeleton className="h-24 w-full" />
               <Skeleton className="h-24 w-full" />
               <Skeleton className="h-24 w-full" />
             </div>
@@ -167,7 +168,7 @@ export function BudgetSummary() {
               config={chartConfig}
               className="mx-auto aspect-square max-h-[300px] min-h-[200px]"
             >
-              {totalAllocated > 0 ? (
+              {totalSpending > 0 ? (
                 <PieChart>
                   <ChartTooltip
                     cursor={false}
@@ -196,12 +197,12 @@ export function BudgetSummary() {
                 </PieChart>
               ) : (
                 <div className="flex h-full w-full items-center justify-center rounded-lg border-2 border-dashed">
-                  <p className="text-muted-foreground">Not enough data to display chart.</p>
+                  <p className="text-muted-foreground">No spending data for this month.</p>
                 </div>
               )}
             </ChartContainer>
           </div>
-          <div className="grid gap-4">
+          <div className="grid grid-cols-2 gap-4">
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <CardTitle className="text-sm font-medium">Total Income</CardTitle>
@@ -211,50 +212,62 @@ export function BudgetSummary() {
                 <div className="text-2xl font-bold">{formatCurrency(totalIncome)}</div>
               </CardContent>
             </Card>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              {Object.entries(chartConfig)
-                .filter(([key]) => ['Needs', 'Wants', 'Savings'].includes(key))
-                .map(([key, config]) => {
-                  const item = chartData.find(d => d.type === key);
-                  const amount = item?.amount ?? 0;
-                  
-                  if (!item) return null;
-                  
-                  const Icon = 'icon' in config ? config.icon : null;
-
-                  return (
-                    <Card key={key} className="flex flex-col">
-                      <CardHeader className="pb-2">
-                        <div className="flex items-center gap-2">
-                          {Icon && <Icon className="h-4 w-4 text-muted-foreground" />}
-                          <CardTitle className="text-sm font-medium">{config.label}</CardTitle>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="flex-1 flex items-end">
-                        <div className="text-xl font-bold">{formatCurrency(amount)}</div>
-                      </CardContent>
-                    </Card>
-                  );
-              })}
-            </div>
             <Card>
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Remaining to Budget</CardTitle>
+                  <div className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm font-medium">Needs</CardTitle>
+                  </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-xl font-bold">{formatCurrency(needsTotal)}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="flex items-center gap-2">
+                    <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm font-medium">Wants</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-xl font-bold">{formatCurrency(wantsTotal)}</div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="flex items-center gap-2">
+                    <Wallet className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm font-medium">Total Savings</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-xl font-bold">{formatCurrency(savingsTotal)}</div>
+              </CardContent>
+            </Card>
+            <Card className="col-span-2">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Net Balance</CardTitle>
                 <PiggyBank className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{formatCurrency(remaining)}</div>
+                <div className="text-2xl font-bold">{formatCurrency(netBalance)}</div>
                 <p className="text-xs text-muted-foreground">
-                  {formatCurrency(totalIncome)} (Income) - {formatCurrency(totalAllocated)} (Allocated)
+                  Income - (Spent + Saved)
                 </p>
               </CardContent>
             </Card>
           </div>
         </CardContent>
         <CardFooter>
-          <p className="text-xs text-muted-foreground">This summary is based on your logged income and expenses for the selected month.</p>
+          <p className="text-xs text-muted-foreground">This summary is based on your logged transactions for the selected month.</p>
         </CardFooter>
       </Card>
     </div>
   )
 }
+    
+
+    
+
+    

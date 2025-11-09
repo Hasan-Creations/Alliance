@@ -19,7 +19,7 @@ const startupOptions: { value: View, label: string }[] = [
   { value: 'dashboard', label: 'Dashboard' },
   { value: 'todos', label: 'To-Do List' },
   { value: 'habits', label: 'Habit Tracker' },
-  { value: 'expenses', label: 'Finance Tracker' },
+  { value: 'finance', label: 'Finance Tracker' },
 ];
 
 export function StartupPreferences() {

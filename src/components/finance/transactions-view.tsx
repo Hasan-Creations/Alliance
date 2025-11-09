@@ -56,7 +56,7 @@ import * as z from "zod";
 import { format, parseISO } from "date-fns";
 import { toZonedTime } from 'date-fns-tz';
 import { CalendarIcon, Plus, Trash2, PlusCircle, MinusCircle, ArrowRightLeft } from "lucide-react";
-import type { Account, Transaction, TransactionCategory, ExpenseType } from "@/lib/types";
+import type { Account, Transaction, TransactionCategory, ExpenseSubType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useCollection, useFirestore, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase";
 import { collection, doc, increment } from "firebase/firestore";
@@ -214,7 +214,7 @@ export function TransactionsView() {
       accountId: values.accountId,
       ...(values.toAccountId && { toAccountId: values.toAccountId }),
       ...(values.category && { category: values.category }),
-      ...(values.type === 'expense' && { subType: values.subType }),
+      ...(values.type === 'expense' && { subType: values.subType as ExpenseSubType }),
     };
 
     addTransaction(transactionData);
@@ -652,7 +652,7 @@ export function TransactionsView() {
                       {formatCurrency(transaction.amount)}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive" onClick={() => deleteTransaction(transaction)}>
+                      <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive h-8 w-8" onClick={() => deleteTransaction(transaction)}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </TableCell>
@@ -670,4 +670,3 @@ export function TransactionsView() {
     </div>
   );
 }
-    

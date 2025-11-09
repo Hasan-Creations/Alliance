@@ -81,13 +81,13 @@ export function BudgetSummary() {
       .reduce((acc, t) => acc + t.amount, 0);
 
     const savingsOutflow = monthlyTransactions
-      .filter(t => t.accountId === savingsAccount?.id && (t.type === 'expense' || t.type === 'transfer'))
+      .filter(t => (t.type === 'expense' || t.type === 'transfer') && t.accountId === savingsAccount?.id)
       .reduce((acc, t) => acc + t.amount, 0);
 
     const savingsTotal = savingsInflow - savingsOutflow;
 
     const totalSpending = needsTotal + wantsTotal;
-    const netBalance = totalIncome - totalSpending - savingsTotal;
+    const netBalance = totalIncome - totalSpending - savingsInflow;
 
     const chartData = [
       { type: "Needs", amount: needsTotal, fill: "var(--color-Needs)" },
@@ -266,8 +266,3 @@ export function BudgetSummary() {
     </div>
   )
 }
-    
-
-    
-
-    

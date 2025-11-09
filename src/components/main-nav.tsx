@@ -18,7 +18,7 @@ const menuItems: { href: View, label: string, icon: React.ElementType }[] = [
   { href: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "todos", label: "To-Do List", icon: CheckSquare },
   { href: "habits", label: "Habit Tracker", icon: Target },
-  { href: "expenses", label: "Finance Tracker", icon: Wallet },
+  { href: "finance", label: "Finance Tracker", icon: Wallet },
   { href: "settings", label: "Settings", icon: Settings },
 ];
 

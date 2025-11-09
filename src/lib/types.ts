@@ -1,10 +1,9 @@
 
-
 export type Priority = "High" | "Medium" | "Low";
 export type HabitFrequency = "Daily" | "Weekly" | "Custom";
-export type ExpenseType = "Need" | "Want";
 export type HabitCompletionStatus = 'completed' | 'missed' | 'pending';
 export type TransactionType = 'income' | 'expense' | 'transfer';
+export type ExpenseSubType = "Need" | "Want";
 
 export interface Task {
   id: string;
@@ -37,7 +36,7 @@ export interface Transaction {
   description: string;
   category?: string; // Optional: not used for transfers
   type: TransactionType;
-  subType?: ExpenseType; // For expenses: 'Need', 'Want'
+  subType?: ExpenseSubType; // For expenses: 'Need', 'Want'
 }
 
 export interface TransactionCategory {

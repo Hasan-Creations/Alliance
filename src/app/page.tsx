@@ -43,7 +43,7 @@ export default function AppPage() {
         return <TodoView />;
       case 'habits':
         return <HabitsView />;
-      case 'expenses':
+      case 'finance':
         return <FinanceView />;
       case 'settings':
         return <SettingsView />;

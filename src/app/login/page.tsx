@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -69,9 +70,9 @@ export default function LoginPage() {
         });
         return;
       }
-      initiateEmailSignUp(auth, email, password, name, toast);
+      initiateEmailSignUp(auth, email, password, name);
     } else {
-      initiateEmailSignIn(auth, email, password, toast);
+      initiateEmailSignIn(auth, email, password);
     }
   };
 

@@ -2,12 +2,8 @@
 
 import React, { useContext, Suspense } from "react";
 import dynamic from 'next/dynamic';
-import { useSidebar } from "@/components/ui/sidebar";
-import { MainNav } from "@/components/main-nav";
-import { BottomNav } from "@/components/bottom-nav";
-import { Loader2 } from "lucide-react";
-import { AppViewContext } from "@/context/app-view-context";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AppViewContext } from "@/context/app-view-context";
 
 // Dynamically import the main views
 const DashboardView = dynamic(() => import('@/components/dashboard/dashboard-view').then(mod => mod.DashboardView), {
@@ -40,7 +36,6 @@ function ViewSkeleton() {
     </div>
   );
 }
-
 
 export default function AppPage() {
   const { view } = useContext(AppViewContext);

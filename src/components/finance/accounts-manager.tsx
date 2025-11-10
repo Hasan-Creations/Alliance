@@ -175,7 +175,7 @@ export function AccountsManager() {
                 className="p-4 border rounded-lg flex justify-between items-center"
               >
                 <span className="font-medium">{account.name}</span>
-                <span className="font-mono text-lg font-semibold">
+                <span className="text-lg font-semibold">
                   {formatCurrency(account.balance)}
                 </span>
               </div>

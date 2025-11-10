@@ -92,9 +92,11 @@ export default function LoginPage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <Card className="w-full max-w-sm">
-        <CardHeader className="text-center items-center">
-            <AppLogo />
-          <CardTitle className="text-2xl pt-4">{isSignUp ? 'Create an Account' : 'Welcome Back'}</CardTitle>
+        <CardHeader className="text-center">
+            <div className="flex justify-center mb-4">
+             <AppLogo />
+            </div>
+          <CardTitle className="text-2xl">{isSignUp ? 'Create an Account' : 'Welcome Back'}</CardTitle>
           <CardDescription>
             {isSignUp ? 'Enter your details to get started.' : 'Sign in to continue to Alliance.'}
           </CardDescription>

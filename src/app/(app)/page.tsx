@@ -1,9 +1,10 @@
+
 'use client';
 
-import React, { useContext, Suspense } from "react";
+import React, { useContext } from "react";
 import dynamic from 'next/dynamic';
-import { Skeleton } from "@/components/ui/skeleton";
 import { AppViewContext } from "@/context/app-view-context";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Dynamically import the main views
 const DashboardView = dynamic(() => import('@/components/dashboard/dashboard-view').then(mod => mod.DashboardView), {
@@ -37,6 +38,7 @@ function ViewSkeleton() {
   );
 }
 
+
 export default function AppPage() {
   const { view } = useContext(AppViewContext);
   
@@ -57,9 +59,5 @@ export default function AppPage() {
     }
   };
 
-  return (
-    <Suspense fallback={<ViewSkeleton />}>
-      {renderView()}
-    </Suspense>
-  );
+  return renderView();
 }

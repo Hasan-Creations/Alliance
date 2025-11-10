@@ -322,10 +322,10 @@ export function TransactionsView() {
     return Array.from(months).sort().reverse();
   }, [transactions]);
   
-  const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("en-PK", {
-      style: "currency",
-      currency: "PKR",
+  const formatAmount = (value: number) => {
+    return new Intl.NumberFormat("en-US", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(value);
   }
   
@@ -497,7 +497,7 @@ export function TransactionsView() {
                       <FormItem>
                         <FormLabel>Amount</FormLabel>
                         <FormControl>
-                          <Input type="number" placeholder="0.00" {...field} />
+                          <Input type="number" placeholder="0" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -670,7 +670,7 @@ export function TransactionsView() {
                 </div>
                 <div className="text-right">
                     <p className="text-sm text-muted-foreground">Net Flow</p>
-                    <p className={cn("text-xl font-bold", filteredTotal >= 0 ? "text-primary" : "text-destructive")}>{formatCurrency(filteredTotal)}</p>
+                    <p className={cn("text-xl font-bold", filteredTotal >= 0 ? "text-primary" : "text-destructive")}>{formatAmount(filteredTotal)}</p>
                 </div>
             </div>
         </CardHeader>
@@ -694,16 +694,16 @@ export function TransactionsView() {
               ) : filteredTransactions.length > 0 ? (
                 filteredTransactions.map((transaction) => (
                   <TableRow key={transaction.id}>
-                    <TableCell>
+                    <TableCell className="p-2">
                       <div className="font-medium">{transaction.description}</div>
-                      <div className="text-sm text-muted-foreground">{format(toZonedTime(new Date(`${transaction.date}T00:00:00`), Intl.DateTimeFormat().resolvedOptions().timeZone), 'PPP')}</div>
+                      <div className="text-sm text-muted-foreground">{format(toZonedTime(new Date(`${transaction.date}T00:00:00`), Intl.DateTimeFormat().resolvedOptions().timeZone), 'M/d/yy')}</div>
                     </TableCell>
-                    <TableCell>{renderTransactionDetails(transaction)}</TableCell>
-                    <TableCell className={cn("text-right font-medium", transaction.type === 'income' ? 'text-primary' : transaction.type === 'expense' ? 'text-destructive' : 'text-muted-foreground' )}>
+                    <TableCell className="p-2">{renderTransactionDetails(transaction)}</TableCell>
+                    <TableCell className={cn("text-right font-medium p-2", transaction.type === 'income' ? 'text-primary' : transaction.type === 'expense' ? 'text-destructive' : 'text-muted-foreground' )}>
                       {transaction.type === 'income' ? '+' : transaction.type === 'expense' ? '-' : ''}
-                      {formatCurrency(transaction.amount)}
+                      {formatAmount(transaction.amount)}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right p-2">
                       <div className="flex flex-col items-center">
                         <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive" onClick={() => deleteTransaction(transaction)}>
                           <Trash2 className="h-4 w-4" />
@@ -727,3 +727,5 @@ export function TransactionsView() {
     </div>
   );
 }
+
+    

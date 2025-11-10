@@ -94,6 +94,8 @@ export function AccountsManager() {
     return new Intl.NumberFormat("en-PK", {
       style: "currency",
       currency: "PKR",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(value);
   }
 
@@ -175,7 +177,7 @@ export function AccountsManager() {
                 className="p-4 border rounded-lg flex justify-between items-center"
               >
                 <span className="font-medium">{account.name}</span>
-                <span className="text-lg font-semibold">
+                <span className="font-semibold">
                   {formatCurrency(account.balance)}
                 </span>
               </div>
@@ -186,5 +188,7 @@ export function AccountsManager() {
     </Card>
   );
 }
+
+    
 
     

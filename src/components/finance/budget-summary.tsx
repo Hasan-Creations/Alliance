@@ -62,7 +62,7 @@ export function BudgetSummary() {
   const [activeMonth, setActiveMonth] = React.useState(startOfMonth(new Date()))
 
   const monthlyData = useMemo(() => {
-    if (!transactions || !accounts) return { totalIncome: 0, needsTotal: 0, wantsTotal: 0, savingsTotal: 0, netBalance: 0, chartData: [], totalSpending: 0 };
+    if (!transactions || !accounts) return { totalIncome: 0, needsTotal: 0, wantsTotal: 0, savingsTotal: 0, remainingToBudget: 0, chartData: [], totalSpending: 0 };
 
     const monthlyTransactions = transactions.filter(t => isSameMonth(parseISO(t.date), activeMonth));
     const savingsAccount = accounts.find(a => a.name === 'Savings Account');
@@ -76,33 +76,31 @@ export function BudgetSummary() {
     const needsTotal = expenses.filter(e => e.subType === 'Need').reduce((acc, e) => acc + e.amount, 0);
     const wantsTotal = expenses.filter(e => e.subType === 'Want').reduce((acc, e) => acc + e.amount, 0);
     
+    // This is the amount transferred TO the savings account this month
     const savingsInflow = monthlyTransactions
       .filter(t => t.type === 'transfer' && t.toAccountId === savingsAccount?.id)
       .reduce((acc, t) => acc + t.amount, 0);
 
-    const savingsOutflow = monthlyTransactions
-      .filter(t => (t.type === 'expense' || t.type === 'transfer') && t.accountId === savingsAccount?.id)
-      .reduce((acc, t) => acc + t.amount, 0);
-
-    const savingsTotal = savingsInflow - savingsOutflow;
-
     const totalSpending = needsTotal + wantsTotal;
-    const netBalance = totalIncome - totalSpending - savingsInflow;
+    const remainingToBudget = totalIncome - totalSpending;
+    const savingsTotal = savingsInflow;
 
     const chartData = [
       { type: "Needs", amount: needsTotal, fill: "var(--color-Needs)" },
       { type: "Wants", amount: wantsTotal, fill: "var(--color-Wants)" },
     ].filter(d => d.amount > 0);
 
-    return { totalIncome, needsTotal, wantsTotal, savingsTotal, netBalance, chartData, totalSpending };
+    return { totalIncome, needsTotal, wantsTotal, savingsTotal, remainingToBudget, chartData, totalSpending };
   }, [transactions, activeMonth, accounts]);
 
-  const { totalIncome, netBalance, chartData, totalSpending, wantsTotal, needsTotal, savingsTotal } = monthlyData;
+  const { totalIncome, remainingToBudget, chartData, totalSpending, wantsTotal, needsTotal, savingsTotal } = monthlyData;
 
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat("en-PK", {
       style: "currency",
       currency: "PKR",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
     }).format(value);
   }
 
@@ -238,7 +236,7 @@ export function BudgetSummary() {
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div className="flex items-center gap-2">
                     <Wallet className="h-4 w-4 text-muted-foreground" />
-                    <CardTitle className="text-sm font-medium">Total Savings</CardTitle>
+                    <CardTitle className="text-sm font-medium">Added to Savings</CardTitle>
                 </div>
               </CardHeader>
               <CardContent>
@@ -247,13 +245,13 @@ export function BudgetSummary() {
             </Card>
             <Card className="col-span-2">
               <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">Net Balance</CardTitle>
+                <CardTitle className="text-sm font-medium">Remaining to Budget</CardTitle>
                 <PiggyBank className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{formatCurrency(netBalance)}</div>
+                <div className="text-2xl font-bold">{formatCurrency(remainingToBudget)}</div>
                 <p className="text-xs text-muted-foreground">
-                  Income - (Spent + Saved)
+                  Monthly Income - Monthly Expenses
                 </p>
               </CardContent>
             </Card>
@@ -266,3 +264,5 @@ export function BudgetSummary() {
     </div>
   )
 }
+
+    

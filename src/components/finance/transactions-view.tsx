@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -55,7 +55,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { format, parseISO } from "date-fns";
 import { toZonedTime } from 'date-fns-tz';
-import { CalendarIcon, Plus, Trash2, PlusCircle, MinusCircle, ArrowRightLeft } from "lucide-react";
+import { CalendarIcon, Plus, Trash2, PlusCircle, MinusCircle, ArrowRightLeft, Pencil } from "lucide-react";
 import type { Account, Transaction, TransactionCategory, ExpenseSubType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useCollection, useFirestore, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase";
@@ -89,6 +89,9 @@ export function TransactionsView() {
   const { user } = useUser();
   const firestore = useFirestore();
 
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+
   const accountsRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
     return collection(firestore, 'users', user.uid, 'accounts');
@@ -111,8 +114,6 @@ export function TransactionsView() {
     if (!transactionsRef || !firestore || !user || !accounts) return;
     addDocumentNonBlocking(transactionsRef, data);
 
-    const savingsAccount = accounts.find(a => a.name === 'Savings Account');
-
     if (data.type === 'income') {
         const accountRef = doc(firestore, 'users', user.uid, 'accounts', data.accountId);
         updateDocumentNonBlocking(accountRef, { balance: increment(data.amount) });
@@ -127,12 +128,44 @@ export function TransactionsView() {
     }
   };
   
+  const updateTransaction = (id: string, oldTransaction: Transaction, newData: Omit<Transaction, 'id'>) => {
+      if (!firestore || !user) return;
+      const docRef = doc(firestore, 'users', user.uid, 'transactions', id);
+      updateDocumentNonBlocking(docRef, newData);
+
+      // Revert old transaction effect on balances
+      if (oldTransaction.type === 'income') {
+          const accountRef = doc(firestore, 'users', user.uid, 'accounts', oldTransaction.accountId);
+          updateDocumentNonBlocking(accountRef, { balance: increment(-oldTransaction.amount) });
+      } else if (oldTransaction.type === 'expense') {
+          const accountRef = doc(firestore, 'users', user.uid, 'accounts', oldTransaction.accountId);
+          updateDocumentNonBlocking(accountRef, { balance: increment(oldTransaction.amount) });
+      } else if (oldTransaction.type === 'transfer' && oldTransaction.toAccountId) {
+          const fromAccountRef = doc(firestore, 'users', user.uid, 'accounts', oldTransaction.accountId);
+          updateDocumentNonBlocking(fromAccountRef, { balance: increment(oldTransaction.amount) });
+          const toAccountRef = doc(firestore, 'users', user.uid, 'accounts', oldTransaction.toAccountId);
+          updateDocumentNonBlocking(toAccountRef, { balance: increment(-oldTransaction.amount) });
+      }
+
+      // Apply new transaction effect on balances
+      if (newData.type === 'income') {
+          const accountRef = doc(firestore, 'users', user.uid, 'accounts', newData.accountId);
+          updateDocumentNonBlocking(accountRef, { balance: increment(newData.amount) });
+      } else if (newData.type === 'expense') {
+          const accountRef = doc(firestore, 'users', user.uid, 'accounts', newData.accountId);
+          updateDocumentNonBlocking(accountRef, { balance: increment(-newData.amount) });
+      } else if (newData.type === 'transfer' && newData.toAccountId) {
+          const fromAccountRef = doc(firestore, 'users', user.uid, 'accounts', newData.accountId);
+          updateDocumentNonBlocking(fromAccountRef, { balance: increment(-newData.amount) });
+          const toAccountRef = doc(firestore, 'users', user.uid, 'accounts', newData.toAccountId);
+          updateDocumentNonBlocking(toAccountRef, { balance: increment(newData.amount) });
+      }
+  };
+  
   const deleteTransaction = (transaction: Transaction) => {
     if (!firestore || !user || !accounts) return;
     const docRef = doc(firestore, 'users', user.uid, 'transactions', transaction.id);
     deleteDocumentNonBlocking(docRef);
-
-    const savingsAccount = accounts.find(a => a.name === 'Savings Account');
 
     if (transaction.type === 'income') {
         const accountRef = doc(firestore, 'users', user.uid, 'accounts', transaction.accountId);
@@ -156,7 +189,6 @@ export function TransactionsView() {
     });
   };
 
-  const [isFormOpen, setIsFormOpen] = useState(false);
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryType, setNewCategoryType] = useState<'income'|'expense'>('expense');
@@ -217,17 +249,22 @@ export function TransactionsView() {
       ...(values.type === 'expense' && { subType: values.subType as ExpenseSubType }),
     };
 
-    addTransaction(transactionData);
+    if (editingTransaction) {
+        updateTransaction(editingTransaction.id, editingTransaction, transactionData);
+    } else {
+        addTransaction(transactionData);
+    }
+    
     form.reset();
+    setEditingTransaction(null);
     setIsFormOpen(false);
   };
   
   const openNewTransactionDialog = () => {
+    setEditingTransaction(null);
     const cashInHandAccount = accounts?.find(a => a.name === 'Cash in Hand');
     const savingsAccount = accounts?.find(a => a.name === 'Savings Account');
     
-    const currentType = form.getValues('type');
-
     form.reset({
       description: "",
       amount: 0,
@@ -250,6 +287,21 @@ export function TransactionsView() {
 
     setIsFormOpen(true);
   };
+
+  const handleEdit = useCallback((transaction: Transaction) => {
+      setEditingTransaction(transaction);
+      form.reset({
+          description: transaction.description,
+          amount: transaction.amount,
+          type: transaction.type,
+          date: parseISO(transaction.date),
+          accountId: transaction.accountId,
+          toAccountId: transaction.toAccountId,
+          category: transaction.category,
+          subType: transaction.subType,
+      });
+      setIsFormOpen(true);
+  }, [form]);
   
   const handleAddCategory = () => {
     const trimmedName = newCategoryName.trim();
@@ -386,7 +438,7 @@ export function TransactionsView() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Add New Transaction</DialogTitle>
+              <DialogTitle>{editingTransaction ? "Edit Transaction" : "Add New Transaction"}</DialogTitle>
             </DialogHeader>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -601,7 +653,7 @@ export function TransactionsView() {
                 
                 <DialogFooter className="grid grid-cols-2 gap-2 pt-2">
                     <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
-                    <Button type="submit">Add Transaction</Button>
+                    <Button type="submit">{editingTransaction ? "Save Changes" : "Add Transaction"}</Button>
                 </DialogFooter>
               </form>
             </Form>
@@ -652,9 +704,14 @@ export function TransactionsView() {
                       {formatCurrency(transaction.amount)}
                     </TableCell>
                     <TableCell className="text-right">
-                      <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive h-8 w-8" onClick={() => deleteTransaction(transaction)}>
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <div className="flex flex-col items-center">
+                        <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive" onClick={() => deleteTransaction(transaction)}>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => handleEdit(transaction)}>
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ))

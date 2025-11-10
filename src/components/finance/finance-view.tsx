@@ -1,12 +1,12 @@
-
 "use client";
 
+import React from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AccountsManager } from "@/components/finance/accounts-manager";
 import { BudgetSummary } from "@/components/finance/budget-summary";
 import { TransactionsView } from "@/components/finance/transactions-view";
 
-export function FinanceView() {
+export const FinanceView = React.memo(function FinanceView() {
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
       <div>
@@ -29,4 +29,4 @@ export function FinanceView() {
       </Tabs>
     </div>
   );
-}
+});

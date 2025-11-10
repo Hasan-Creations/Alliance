@@ -1,6 +1,6 @@
-
 "use client";
 
+import React, { useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth, useUser } from '@/firebase';
@@ -9,17 +9,17 @@ import { useRouter } from 'next/navigation';
 import { StartupPreferences } from './startup-preferences';
 import { DataExporter } from './data-exporter';
 
-export function SettingsView() {
+export const SettingsView = React.memo(function SettingsView() {
   const auth = useAuth();
   const { user } = useUser();
   const router = useRouter();
 
-  const handleSignOut = async () => {
+  const handleSignOut = useCallback(async () => {
     if (auth) {
         await auth.signOut();
     }
     router.push('/login');
-  };
+  }, [auth, router]);
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
@@ -54,4 +54,4 @@ export function SettingsView() {
       <DataExporter />
     </div>
   );
-}
+});

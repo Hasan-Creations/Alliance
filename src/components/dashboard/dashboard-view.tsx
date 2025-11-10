@@ -1,10 +1,11 @@
 "use client";
 
+import React from 'react';
 import { FinanceSummary } from "./finance-summary";
 import { HabitsSummary } from "./habits-summary";
 import { TodoSummary } from "./todo-summary";
 
-export function DashboardView() {
+export const DashboardView = React.memo(function DashboardView() {
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
        <div>
@@ -19,4 +20,4 @@ export function DashboardView() {
       </div>
     </div>
   );
-}
+});

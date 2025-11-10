@@ -1,7 +1,6 @@
-
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,7 +24,7 @@ import type { Habit } from '@/lib/types';
 import { useCollection, useFirestore, useUser, useMemoFirebase, addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
 
-export function HabitsView() {
+export const HabitsView = React.memo(function HabitsView() {
   const { user } = useUser();
   const firestore = useFirestore();
 
@@ -43,18 +42,18 @@ export function HabitsView() {
 
   const todayStr = format(new Date(), 'yyyy-MM-dd');
 
-  const addHabit = (name: string) => {
+  const addHabit = useCallback((name: string) => {
     if (!habitsRef) return;
     addDocumentNonBlocking(habitsRef, { name, completions: {} });
-  };
+  }, [habitsRef]);
 
-  const deleteHabit = (id: string) => {
+  const deleteHabit = useCallback((id: string) => {
     if (!firestore || !user) return;
     const docRef = doc(firestore, 'users', user.uid, 'habits', id);
     deleteDocumentNonBlocking(docRef);
-  };
+  }, [firestore, user]);
 
-  const toggleHabitCompletion = (id: string, date: string) => {
+  const toggleHabitCompletion = useCallback((id: string, date: string) => {
     if (!firestore || !user || !habits) return;
     const habit = habits.find(h => h.id === id);
     if (!habit) return;
@@ -71,29 +70,29 @@ export function HabitsView() {
     }
 
     updateDocumentNonBlocking(docRef, { completions: newCompletions });
-  };
+  }, [firestore, user, habits]);
 
-  const handleAddHabit = (e: React.FormEvent) => {
+  const handleAddHabit = useCallback((e: React.FormEvent) => {
     e.preventDefault();
     if (newHabitName.trim()) {
       addHabit(newHabitName.trim());
       setNewHabitName('');
       setIsAddDialogOpen(false);
     }
-  };
+  }, [addHabit, newHabitName]);
 
-  const handleConfirmDelete = () => {
+  const handleConfirmDelete = useCallback(() => {
     if(habitToDelete) {
         deleteHabit(habitToDelete.id);
     }
     setHabitToDelete(null);
     setIsDeleteDialogOpen(false);
-  };
+  }, [habitToDelete, deleteHabit]);
   
-  const openDeleteDialog = (habit: Habit) => {
+  const openDeleteDialog = useCallback((habit: Habit) => {
     setHabitToDelete(habit);
     setIsDeleteDialogOpen(true);
-  };
+  }, []);
 
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
@@ -122,8 +121,8 @@ export function HabitsView() {
                     onChange={(e) => setNewHabitName(e.target.value)}
                   />
               </div>
-              <DialogFooter>
-                <DialogClose asChild><Button type="button" variant="secondary">Cancel</Button></DialogClose>
+              <DialogFooter className="grid grid-cols-2 gap-2">
+                <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
                 <Button type="submit">Add Habit</Button>
               </DialogFooter>
             </form>
@@ -197,4 +196,4 @@ export function HabitsView() {
 
     </div>
   );
-}
+});

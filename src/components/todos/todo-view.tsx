@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -49,6 +49,7 @@ import { cn } from "@/lib/utils";
 import { Skeleton } from "../ui/skeleton";
 import { useCollection, useFirestore, useUser, useMemoFirebase, addDocumentNonBlocking, updateDocumentNonBlocking, deleteDocumentNonBlocking } from "@/firebase";
 import { collection, doc } from "firebase/firestore";
+import React from "react";
 
 const taskSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -58,7 +59,6 @@ const taskSchema = z.object({
 });
 
 type TaskFormValues = z.infer<typeof taskSchema>;
-
 type SortKey = 'default' | 'priority' | 'dueDate';
 type SortOrder = 'asc' | 'desc';
 
@@ -68,7 +68,54 @@ const priorityColors: Record<Priority, string> = {
   Low: "bg-green-500",
 };
 
-export function TodoView() {
+const TaskItem = React.memo(function TaskItem({ task, onToggle, onEdit, onDelete }: { task: Task, onToggle: (id: string) => void, onEdit: (task: Task) => void, onDelete: (id: string) => void}) {
+  return (
+    <Card className={cn("transition-opacity", task.completed && "opacity-50")}>
+      <CardContent className="p-4 flex items-start gap-4">
+        <Checkbox
+          id={`task-${task.id}`}
+          checked={task.completed}
+          onCheckedChange={() => onToggle(task.id)}
+          className="mt-1"
+        />
+        <div className="flex-1 grid gap-1 min-w-0">
+          <label
+            htmlFor={`task-${task.id}`}
+            className={cn(
+              "font-medium cursor-pointer break-words",
+              task.completed && "line-through"
+            )}
+          >
+            {task.title}
+          </label>
+          {task.description && (
+            <p className="text-sm text-muted-foreground break-words">{task.description}</p>
+          )}
+          <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground mt-1">
+            <div className="flex items-center gap-2">
+              <span className={cn("h-2.5 w-2.5 rounded-full", priorityColors[task.priority])} />
+              <span>{task.priority}</span>
+            </div>
+            {task.dueDate && (
+              <div className="flex items-center gap-1">
+                <CalendarIcon className="h-3 w-3" />
+                <span>{format(parseISO(task.dueDate), "PPP")}</span>
+              </div>
+            )}
+          </div>
+        </div>
+        <div className="flex items-center gap-1 sm:gap-2">
+          <Button variant="ghost" size="sm" onClick={() => onEdit(task)}>Edit</Button>
+          <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive h-8 w-8" onClick={() => onDelete(task.id)}>
+            <Trash2 className="h-4 w-4"/>
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  )
+});
+
+export const TodoView = React.memo(function TodoView() {
   const { user } = useUser();
   const firestore = useFirestore();
 
@@ -76,7 +123,7 @@ export function TodoView() {
     if (!firestore || !user) return null;
     return collection(firestore, 'users', user.uid, 'tasks');
   }, [firestore, user]);
-  
+
   const { data: tasks, isLoading: isLoadingTasks } = useCollection<Task>(tasksRef);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -94,7 +141,7 @@ export function TodoView() {
     },
   });
 
-  const onSubmit = (values: TaskFormValues) => {
+  const onSubmit = useCallback((values: TaskFormValues) => {
     if (!firestore || !user) return;
 
     const taskData = {
@@ -113,9 +160,9 @@ export function TodoView() {
     form.reset();
     setEditingTask(null);
     setIsFormOpen(false);
-  };
+  }, [firestore, user, editingTask, tasksRef, form]);
 
-  const handleEdit = (task: Task) => {
+  const handleEdit = useCallback((task: Task) => {
     setEditingTask(task);
     form.reset({
       title: task.title,
@@ -124,23 +171,23 @@ export function TodoView() {
       dueDate: task.dueDate ? parseISO(task.dueDate) : null,
     });
     setIsFormOpen(true);
-  };
+  }, [form]);
 
-  const deleteTask = (id: string) => {
+  const deleteTask = useCallback((id: string) => {
     if (!firestore || !user) return;
     const docRef = doc(firestore, 'users', user.uid, 'tasks', id);
     deleteDocumentNonBlocking(docRef);
-  };
+  }, [firestore, user]);
 
-  const toggleTaskCompletion = (id: string) => {
+  const toggleTaskCompletion = useCallback((id: string) => {
     if (!firestore || !user || !tasks) return;
     const task = tasks.find(t => t.id === id);
     if (!task) return;
     const docRef = doc(firestore, 'users', user.uid, 'tasks', id);
     updateDocumentNonBlocking(docRef, { completed: !task.completed });
-  };
+  }, [firestore, user, tasks]);
 
-  const openNewTaskDialog = () => {
+  const openNewTaskDialog = useCallback(() => {
     setEditingTask(null);
     form.reset({
       title: "",
@@ -149,18 +196,15 @@ export function TodoView() {
       dueDate: null,
     });
     setIsFormOpen(true);
-  };
-  
+  }, [form]);
+
   const sortedTasks = useMemo(() => {
     if (!tasks) return [];
     const priorityOrder: Record<Priority, number> = { High: 1, Medium: 2, Low: 3 };
 
     return [...tasks].sort((a, b) => {
-      // Completed tasks always at the bottom
-      if (a.completed !== b.completed) {
-        return a.completed ? 1 : -1;
-      }
-      
+      if (a.completed !== b.completed) return a.completed ? 1 : -1;
+
       let comparison = 0;
 
       switch(sortKey) {
@@ -171,30 +215,25 @@ export function TodoView() {
           if (a.dueDate && b.dueDate) {
             comparison = new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
           } else if (a.dueDate) {
-            comparison = -1; // a has due date, b doesn't
+            comparison = -1;
           } else if (b.dueDate) {
-            comparison = 1; // b has due date, a doesn't
+            comparison = 1;
           }
           break;
-        case 'default':
         default:
-          // Keep original order if not sorting, typically based on creation time if available
-          return 0; 
+          return 0;
       }
 
       return sortOrder === 'asc' ? comparison : -comparison;
     });
   }, [tasks, sortKey, sortOrder]);
 
-
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold font-headline">To-Do List</h1>
-          <p className="text-muted-foreground">
-            Manage your tasks and stay organized.
-          </p>
+          <p className="text-muted-foreground">Manage your tasks and stay organized.</p>
         </div>
         <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
           <DialogTrigger asChild>
@@ -235,71 +274,68 @@ export function TodoView() {
                   )}
                 />
                 <div className="grid grid-cols-2 gap-4">
+                  {/* Priority */}
                   <FormField
                     control={form.control}
                     name="priority"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className="flex flex-col">
                         <FormLabel>Priority</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
+                        <FormControl>
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <SelectTrigger className="w-full">
                               <SelectValue placeholder="Select priority" />
                             </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="Low">Low</SelectItem>
-                            <SelectItem value="Medium">Medium</SelectItem>
-                            <SelectItem value="High">High</SelectItem>
-                          </SelectContent>
-                        </Select>
+                            <SelectContent>
+                              <SelectItem value="Low">Low</SelectItem>
+                              <SelectItem value="Medium">Medium</SelectItem>
+                              <SelectItem value="High">High</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
+
+                  {/* Due Date */}
                   <FormField
                     control={form.control}
                     name="dueDate"
                     render={({ field }) => (
                       <FormItem className="flex flex-col">
                         <FormLabel>Due Date</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
+                        <FormControl>
+                          <Popover>
+                            <PopoverTrigger asChild>
                               <Button
-                                variant={"outline"}
+                                variant="outline"
                                 className={cn(
-                                  "pl-3 text-left font-normal",
+                                  "w-full pl-3 text-left font-normal",
                                   !field.value && "text-muted-foreground"
                                 )}
                               >
-                                {field.value ? (
-                                  format(field.value, "PPP")
-                                ) : (
-                                  <span>Pick a date</span>
-                                )}
+                                {field.value ? format(field.value, "PPP") : "Pick a date"}
                                 <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                               </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar
-                              mode="single"
-                              selected={field.value ?? undefined}
-                              onSelect={field.onChange}
-                              initialFocus
-                            />
-                          </PopoverContent>
-                        </Popover>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={field.value ?? undefined}
+                                onSelect={field.onChange}
+                                initialFocus
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
                 </div>
-                <DialogFooter>
-                  <DialogClose asChild>
-                    <Button type="button" variant="secondary">Cancel</Button>
-                  </DialogClose>
+                <DialogFooter className="grid grid-cols-2 gap-2 pt-2">
+                  <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
                   <Button type="submit">{editingTask ? "Save Changes" : "Add Task"}</Button>
                 </DialogFooter>
               </form>
@@ -346,51 +382,10 @@ export function TodoView() {
           </Card>
         ) : (
           sortedTasks.map((task) => (
-            <Card key={task.id} className={cn("transition-opacity", task.completed && "opacity-50")}>
-              <CardContent className="p-4 flex items-start gap-4">
-                <Checkbox
-                  id={`task-${task.id}`}
-                  checked={task.completed}
-                  onCheckedChange={() => toggleTaskCompletion(task.id)}
-                  className="mt-1"
-                />
-                <div className="flex-1 grid gap-1 min-w-0">
-                  <label
-                    htmlFor={`task-${task.id}`}
-                    className={cn(
-                      "font-medium cursor-pointer break-words",
-                      task.completed && "line-through"
-                    )}
-                  >
-                    {task.title}
-                  </label>
-                  {task.description && (
-                    <p className="text-sm text-muted-foreground break-words">{task.description}</p>
-                  )}
-                  <div className="flex flex-wrap items-center gap-4 text-xs text-muted-foreground mt-1">
-                    <div className="flex items-center gap-2">
-                       <span className={cn("h-2.5 w-2.5 rounded-full", priorityColors[task.priority])} />
-                       <span>{task.priority}</span>
-                    </div>
-                    {task.dueDate && (
-                      <div className="flex items-center gap-1">
-                        <CalendarIcon className="h-3 w-3" />
-                        <span>{format(parseISO(task.dueDate), "PPP")}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 sm:gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => handleEdit(task)}>Edit</Button>
-                    <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive h-8 w-8" onClick={() => deleteTask(task.id)}>
-                        <Trash2 className="h-4 w-4"/>
-                    </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <TaskItem key={task.id} task={task} onToggle={toggleTaskCompletion} onEdit={handleEdit} onDelete={deleteTask} />
           ))
         )}
       </div>
     </div>
   );
-}
+});

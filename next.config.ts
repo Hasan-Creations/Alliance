@@ -1,4 +1,3 @@
-
 import type { NextConfig } from 'next';
 import createNextPwa from '@ducanh2912/next-pwa';
 
@@ -80,6 +79,10 @@ const nextConfig: NextConfig = {
         pathname: '/**',
       },
     ],
+  },
+  // Add this to help with the CSS prerendering issue
+  experimental: {
+    optimizePackageImports: ['@/components/ui'],
   },
 };
 

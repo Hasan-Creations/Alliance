@@ -727,5 +727,3 @@ export function TransactionsView() {
     </div>
   );
 }
-
-    

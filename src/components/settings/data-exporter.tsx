@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
 import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, subMonths, startOfDay, endOfDay } from 'date-fns';
-import ExcelJS, { type Worksheet, type Column, type Cell, type Row } from 'exceljs';
+import ExcelJS, { type Worksheet, type Column, type Cell, type Row, type Style, type Font } from 'exceljs';
 import type { Task, Habit, Transaction, Account } from '@/lib/types';
 import { Download, Loader2 } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
@@ -99,12 +99,13 @@ export function DataExporter() {
       const accountIdToNameMap = new Map(accounts.map(acc => [acc.id, acc.name]));
       const getAccountName = (id: string | undefined) => id ? (accountIdToNameMap.get(id) || id) : '';
 
-      const currencyStyle: Partial<ExcelJS.Style> = { numFmt: '"PKR" #,##0' };
-      const greenFont: Partial<ExcelJS.Font> = { color: { argb: 'FF008000' }, bold: true };
-      const redFont: Partial<ExcelJS.Font> = { color: { argb: 'FFFF0000' }, bold: true };
-      const yellowFont: Partial<ExcelJS.Font> = { color: { argb: 'FFB08B00' }, bold: true };
-      const blueFont: Partial<ExcelJS.Font> = { color: { argb: 'FF0000FF' }, bold: true };
-      const boldStyle: Partial<ExcelJS.Style> = { font: { bold: true }};
+      const currencyStyle: Partial<Style> = { numFmt: '"PKR" #,##0' };
+      const greenFont: Partial<Font> = { color: { argb: 'FF008000' }, bold: true };
+      const redFont: Partial<Font> = { color: { argb: 'FFFF0000' }, bold: true };
+      const yellowFont: Partial<Font> = { color: { argb: 'FFB08B00' }, bold: true };
+      const blueFont: Partial<Font> = { color: { argb: 'FF0000FF' }, bold: true };
+      const boldFont: Partial<Font> = { bold: true };
+      const boldStyle: Partial<Style> = { font: boldFont };
 
       // --- Summary Sheet ---
       const summarySheet = workbook.addWorksheet('Summary');
@@ -123,7 +124,7 @@ export function DataExporter() {
       summarySheet.addRow(['Net Savings', monthlyIncome - monthlyExpenses]);
       summarySheet.getRow(3).getCell(2).style = { ...currencyStyle, font: greenFont };
       summarySheet.getRow(4).getCell(2).style = { ...currencyStyle, font: redFont };
-      summarySheet.getRow(5).getCell(2).style = { ...currencyStyle, font: boldStyle };
+      summarySheet.getRow(5).getCell(2).style = { ...currencyStyle, font: boldFont };
       summarySheet.getRow(3).getCell(1).style = boldStyle;
       summarySheet.getRow(4).getCell(1).style = boldStyle;
       summarySheet.getRow(5).getCell(1).style = boldStyle;
@@ -131,9 +132,10 @@ export function DataExporter() {
       summarySheet.addRow([]); // Spacer
 
       // Expense Breakdown by Category
-      summarySheet.addRow(['Expense Breakdown by Category']).font = { bold: true, size: 14 };
-      summarySheet.mergeCells('A7:C7');
-      summarySheet.addRow([]); // Spacer
+      const expenseBreakdownStartRow = 8;
+      summarySheet.getCell(`A${expenseBreakdownStartRow -1}`).value = 'Expense Breakdown by Category';
+      summarySheet.getCell(`A${expenseBreakdownStartRow -1}`).font = { bold: true, size: 14 };
+      summarySheet.mergeCells(`A${expenseBreakdownStartRow -1}:C${expenseBreakdownStartRow -1}`);
       
       const expenseByCategory: { [key: string]: number } = {};
       monthlyTransactions.filter(t => t.type === 'expense').forEach(t => {
@@ -151,10 +153,11 @@ export function DataExporter() {
       summarySheet.addRow([]); // Spacer
 
       // Account Balances
-      summarySheet.addRow(['Account Balances']).font = { bold: true, size: 14 };
-      summarySheet.mergeCells('A13:C13');
-      summarySheet.addRow([]); // Spacer
-
+      const accountBalanceStartRow = summarySheet.lastRow!.number + 2;
+      summarySheet.getCell(`A${accountBalanceStartRow -1}`).value = 'Account Balances';
+      summarySheet.getCell(`A${accountBalanceStartRow -1}`).font = { bold: true, size: 14 };
+      summarySheet.mergeCells(`A${accountBalanceStartRow -1}:C${accountBalanceStartRow -1}`);
+      
       const balanceHeader = summarySheet.addRow(['Account', 'Ending Balance']);
       setHeaderStyle(balanceHeader);
       
@@ -248,7 +251,7 @@ export function DataExporter() {
       sortedTransactions.forEach(t => {
         let fromAccount = '';
         let toAccount = '';
-        let font: Partial<ExcelJS.Font> | undefined = undefined;
+        let font: Partial<Font> | undefined = undefined;
 
         if (t.type === 'income') {
           toAccount = getAccountName(t.accountId);
@@ -281,7 +284,7 @@ export function DataExporter() {
       const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
-      a.href = url;
+a.href = url;
       a.download = `Alliance_Export_${format(monthDate, 'MMM_yyyy')}.xlsx`;
       document.body.appendChild(a);
       a.click();
@@ -352,5 +355,3 @@ export function DataExporter() {
     </Card>
   );
 }
-
-    

@@ -1,4 +1,3 @@
-
 {
   "entities": {
     "UserProfile": {
@@ -84,14 +83,19 @@
             "properties": {
               "status": {
                 "type": "string",
-                "enum": ["completed", "missed"]
+                "enum": [
+                  "completed",
+                  "missed"
+                ]
               },
               "timestamp": {
                 "type": "number",
                 "description": "The timestamp of when the habit was completed."
               }
             },
-            "required": ["status"]
+            "required": [
+              "status"
+            ]
           }
         },
         "createdAt": {

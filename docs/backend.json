@@ -78,13 +78,20 @@
         },
         "completions": {
           "type": "object",
-          "description": "A map of dates to completion status ('completed' or 'missed').",
+          "description": "A map of dates to completion status objects.",
           "additionalProperties": {
-            "type": "string",
-            "enum": [
-              "completed",
-              "missed"
-            ]
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": ["completed", "missed"]
+              },
+              "timestamp": {
+                "type": "number",
+                "description": "The timestamp of when the habit was completed."
+              }
+            },
+            "required": ["status"]
           }
         },
         "createdAt": {

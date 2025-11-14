@@ -1,9 +1,14 @@
 
 export type Priority = "High" | "Medium" | "Low";
 export type HabitFrequency = "Daily" | "Weekly" | "Custom";
-export type HabitCompletionStatus = 'completed' | 'missed' | 'pending';
+export type HabitCompletionStatus = 'completed' | 'missed';
 export type TransactionType = 'income' | 'expense' | 'transfer';
 export type ExpenseSubType = "Need" | "Want";
+
+export type HabitCompletion = {
+  status: HabitCompletionStatus;
+  timestamp?: number; // Optional: timestamp of completion
+};
 
 export interface Task {
   id: string;
@@ -18,8 +23,8 @@ export interface Task {
 export interface Habit {
   id: string;
   name: string;
-  // Map of date (YYYY-MM-DD) to completion status
-  completions: Record<string, HabitCompletionStatus>;
+  // Map of date (YYYY-MM-DD) to completion status object
+  completions: Record<string, HabitCompletion>;
   createdAt: number;
 }
 

@@ -7,8 +7,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useUser, useFirestore, useCollection, useMemoFirebase } from '@/firebase';
 import { collection } from 'firebase/firestore';
-import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth } from 'date-fns';
-import ExcelJS, { type Worksheet, type Column, type Cell } from 'exceljs';
+import { format, parseISO, startOfMonth, endOfMonth, eachDayOfInterval, isSameMonth, subMonths, startOfDay, endOfDay } from 'date-fns';
+import ExcelJS, { type Worksheet, type Column, type Cell, type Row } from 'exceljs';
 import type { Task, Habit, Transaction, Account } from '@/lib/types';
 import { Download, Loader2 } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
@@ -37,12 +37,13 @@ export function DataExporter() {
     const months = new Set<string>();
 
     allData.forEach(item => {
-      const itemDate = (item as any).dueDate || (item as any).date;
-      if (itemDate && typeof itemDate === 'string') {
+      const itemDateStr = (item as any).dueDate || (item as any).date;
+      if (itemDateStr && typeof itemDateStr === 'string') {
         try {
-          months.add(format(startOfMonth(parseISO(itemDate)), 'yyyy-MM'));
+          const itemDate = parseISO(itemDateStr);
+          months.add(format(startOfMonth(itemDate), 'yyyy-MM'));
         } catch (e) {
-          console.warn(`Invalid date format found: ${itemDate}`);
+          console.warn(`Invalid date format found: ${itemDateStr}`);
         }
       }
     });
@@ -71,6 +72,17 @@ export function DataExporter() {
     });
   };
 
+  const setHeaderStyle = (row: Row) => {
+    row.eachCell((cell: Cell) => {
+      cell.style = {
+        font: { bold: true, color: { argb: 'FFFFFFFF' } },
+        fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF50207A' } },
+        alignment: { vertical: 'middle', horizontal: 'center' },
+      };
+    });
+    row.commit();
+  };
+
   const handleExport = async () => {
     if (!tasks || !habits || !transactions || !accounts || !selectedMonth) return;
     setIsExporting(true);
@@ -81,20 +93,79 @@ export function DataExporter() {
       workbook.created = new Date();
 
       const monthDate = parseISO(selectedMonth);
+      const monthStart = startOfMonth(monthDate);
+      const monthEnd = endOfMonth(monthDate);
       
       const accountIdToNameMap = new Map(accounts.map(acc => [acc.id, acc.name]));
       const getAccountName = (id: string | undefined) => id ? (accountIdToNameMap.get(id) || id) : '';
 
-      const headerStyle: Partial<ExcelJS.Style> = {
-        font: { bold: true, color: { argb: 'FFFFFFFF' } },
-        fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF50207A' } },
-        alignment: { vertical: 'middle', horizontal: 'center' },
-      };
+      const currencyStyle: Partial<ExcelJS.Style> = { numFmt: '"PKR" #,##0' };
       const greenFont: Partial<ExcelJS.Font> = { color: { argb: 'FF008000' }, bold: true };
       const redFont: Partial<ExcelJS.Font> = { color: { argb: 'FFFF0000' }, bold: true };
       const yellowFont: Partial<ExcelJS.Font> = { color: { argb: 'FFB08B00' }, bold: true };
       const blueFont: Partial<ExcelJS.Font> = { color: { argb: 'FF0000FF' }, bold: true };
+      const boldStyle: Partial<ExcelJS.Style> = { font: { bold: true }};
+
+      // --- Summary Sheet ---
+      const summarySheet = workbook.addWorksheet('Summary');
       
+      // Monthly Overview
+      summarySheet.addRow(['Monthly Financial Overview']).font = { bold: true, size: 14 };
+      summarySheet.mergeCells('A1:C1');
+      summarySheet.addRow([]); // Spacer
+
+      const monthlyTransactions = transactions.filter(t => isSameMonth(parseISO(t.date), monthDate));
+      const monthlyIncome = monthlyTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+      const monthlyExpenses = monthlyTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+
+      summarySheet.addRow(['Total Income', monthlyIncome]);
+      summarySheet.addRow(['Total Expenses', monthlyExpenses]);
+      summarySheet.addRow(['Net Savings', monthlyIncome - monthlyExpenses]);
+      summarySheet.getRow(3).getCell(2).style = { ...currencyStyle, font: greenFont };
+      summarySheet.getRow(4).getCell(2).style = { ...currencyStyle, font: redFont };
+      summarySheet.getRow(5).getCell(2).style = { ...currencyStyle, font: boldStyle };
+      summarySheet.getRow(3).getCell(1).style = boldStyle;
+      summarySheet.getRow(4).getCell(1).style = boldStyle;
+      summarySheet.getRow(5).getCell(1).style = boldStyle;
+
+      summarySheet.addRow([]); // Spacer
+
+      // Expense Breakdown by Category
+      summarySheet.addRow(['Expense Breakdown by Category']).font = { bold: true, size: 14 };
+      summarySheet.mergeCells('A7:C7');
+      summarySheet.addRow([]); // Spacer
+      
+      const expenseByCategory: { [key: string]: number } = {};
+      monthlyTransactions.filter(t => t.type === 'expense').forEach(t => {
+        const category = t.category || 'Uncategorized';
+        expenseByCategory[category] = (expenseByCategory[category] || 0) + t.amount;
+      });
+
+      const categoryHeader = summarySheet.addRow(['Category', 'Total Spent']);
+      setHeaderStyle(categoryHeader);
+
+      Object.entries(expenseByCategory).sort(([,a], [,b]) => b - a).forEach(([category, total]) => {
+        const row = summarySheet.addRow([category, total]);
+        row.getCell(2).style = currencyStyle;
+      });
+      summarySheet.addRow([]); // Spacer
+
+      // Account Balances
+      summarySheet.addRow(['Account Balances']).font = { bold: true, size: 14 };
+      summarySheet.mergeCells('A13:C13');
+      summarySheet.addRow([]); // Spacer
+
+      const balanceHeader = summarySheet.addRow(['Account', 'Ending Balance']);
+      setHeaderStyle(balanceHeader);
+      
+      accounts.forEach(account => {
+        const row = summarySheet.addRow([account.name, account.balance]);
+        row.getCell(2).style = currencyStyle;
+      });
+
+      autoFitColumns(summarySheet);
+      
+
       // --- Process Tasks ---
       const tasksSheet = workbook.addWorksheet('Tasks');
       tasksSheet.columns = [
@@ -104,8 +175,7 @@ export function DataExporter() {
         { header: 'Due Date', key: 'dueDate' },
         { header: 'Status', key: 'status' },
       ];
-      
-      tasksSheet.getRow(1).eachCell((cell: Cell) => cell.style = headerStyle);
+      setHeaderStyle(tasksSheet.getRow(1));
 
       const filteredTasks = tasks.filter(t => t.dueDate && isSameMonth(parseISO(t.dueDate), monthDate))
           .sort((a, b) => new Date(a.dueDate!).getTime() - new Date(b.dueDate!).getTime());
@@ -119,10 +189,7 @@ export function DataExporter() {
           status: task.completed ? 'Completed' : 'Pending'
         });
 
-        if (task.completed) {
-            row.getCell('status').font = greenFont;
-        }
-
+        if (task.completed) row.getCell('status').font = greenFont;
         const priorityCell = row.getCell('priority');
         if(task.priority === 'High') priorityCell.font = redFont;
         if(task.priority === 'Medium') priorityCell.font = yellowFont;
@@ -138,31 +205,24 @@ export function DataExporter() {
       if (filteredHabits.length > 0) {
         const habitNames = filteredHabits.map(h => h.name);
         habitsSheet.columns = [{ header: 'Date', key: 'date' }, ...habitNames.map(name => ({ header: name, key: name }))];
-        habitsSheet.getRow(1).eachCell((cell: Cell) => cell.style = headerStyle);
+        setHeaderStyle(habitsSheet.getRow(1));
 
-        const daysInMonth = eachDayOfInterval({ start: startOfMonth(monthDate), end: endOfMonth(monthDate) });
+        const daysInMonth = eachDayOfInterval({ start: monthStart, end: monthEnd });
         
         daysInMonth.forEach(day => {
-            const dateStr = format(day, 'yyyy-MM-dd');
+            const dateStr = format(day, "yyyy-MM-dd");
             const rowData: { [key: string]: any } = { date: format(day, 'do MMMM yyyy') };
             
             filteredHabits.forEach(habit => {
-                const status = habit.completions[dateStr];
-                if (status === 'completed') {
-                    rowData[habit.name] = 'Completed';
-                } else {
-                    rowData[habit.name] = 'Not Completed';
-                }
+                const completion = habit.completions[dateStr];
+                rowData[habit.name] = completion?.status === 'completed' ? '✓' : '✗';
             });
 
             const row = habitsSheet.addRow(rowData);
             filteredHabits.forEach((habit, index) => {
                 const cell = row.getCell(index + 2);
-                if (cell.value === 'Completed') {
-                    cell.font = greenFont;
-                } else if (cell.value === 'Not Completed') {
-                    cell.font = redFont;
-                }
+                if (cell.value === '✓') cell.font = greenFont;
+                else cell.font = redFont;
             });
         });
       }
@@ -179,14 +239,13 @@ export function DataExporter() {
         { header: 'To', key: 'to' },
         { header: 'Category', key: 'category' },
         { header: 'Expense Type', key: 'subType' },
-        { header: 'Amount', key: 'amount', style: { numFmt: '"PKR" #,##0.00' } },
+        { header: 'Amount', key: 'amount', style: currencyStyle },
       ];
-      transactionsSheet.getRow(1).eachCell((cell: Cell) => cell.style = headerStyle);
+      setHeaderStyle(transactionsSheet.getRow(1));
       
-      const filteredTransactions = transactions.filter(t => isSameMonth(parseISO(t.date), monthDate))
-          .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      const sortedTransactions = monthlyTransactions.sort((a, b) => a.createdAt - b.createdAt);
       
-      filteredTransactions.forEach(t => {
+      sortedTransactions.forEach(t => {
         let fromAccount = '';
         let toAccount = '';
         let font: Partial<ExcelJS.Font> | undefined = undefined;
@@ -214,9 +273,7 @@ export function DataExporter() {
             amount: t.amount,
         });
 
-        if (font) {
-          row.font = font;
-        }
+        if (font) row.getCell('amount').font = font;
       });
       autoFitColumns(transactionsSheet);
       
@@ -295,3 +352,5 @@ export function DataExporter() {
     </Card>
   );
 }
+
+    

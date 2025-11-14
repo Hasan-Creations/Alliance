@@ -33,7 +33,8 @@ export function HabitsSummary() {
 
     const recentHabits = habits.slice(0, 5).map(habit => {
         const dateStr = format(today, 'yyyy-MM-dd');
-        const status = habit.completions[dateStr] || 'pending';
+        const completion = habit.completions[dateStr];
+        const status = completion?.status || 'pending';
         return {
             id: habit.id,
             name: habit.name,
@@ -46,10 +47,10 @@ export function HabitsSummary() {
       const dateStr = format(date, 'yyyy-MM-dd');
       
       habits.forEach(habit => {
-        const status = habit.completions[dateStr];
-        if (status) { // 'completed' or 'missed'
+        const completion = habit.completions[dateStr];
+        if (completion) { // 'completed' or 'missed'
           totalOpportunities++;
-          if (status === 'completed') {
+          if (completion.status === 'completed') {
             totalCompletions++;
           }
         }

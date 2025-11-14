@@ -66,12 +66,12 @@ export const HabitsView = React.memo(function HabitsView() {
     const docRef = doc(firestore, 'users', user.uid, 'habits', id);
     const newCompletions = { ...habit.completions };
 
-    const currentStatus = newCompletions[date];
+    const currentCompletion = newCompletions[date];
 
-    if (currentStatus === 'completed') {
+    if (currentCompletion?.status === 'completed') {
       delete newCompletions[date]; // Set back to pending
     } else {
-      newCompletions[date] = 'completed'; // Set to completed
+      newCompletions[date] = { status: 'completed', timestamp: Date.now() }; // Set to completed
     }
 
     updateDocumentNonBlocking(docRef, { completions: newCompletions });
@@ -101,7 +101,7 @@ export const HabitsView = React.memo(function HabitsView() {
 
   const sortedHabits = useMemo(() => {
     if (!habits) return [];
-    return [...habits].sort((a, b) => b.createdAt - a.createdAt);
+    return [...habits].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
   }, [habits]);
 
   return (
@@ -156,7 +156,7 @@ export const HabitsView = React.memo(function HabitsView() {
           ) : (
             <div className="grid grid-cols-2 gap-x-4 gap-y-2">
               {sortedHabits.map((habit) => {
-                const isCompleted = habit.completions[todayStr] === 'completed';
+                const isCompleted = habit.completions[todayStr]?.status === 'completed';
                 return (
                   <div key={habit.id} className="flex items-center justify-between">
                     <div className="flex items-center flex-1 min-w-0">

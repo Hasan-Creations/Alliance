@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { cn } from "@/lib/utils"
-import type { Habit } from "@/lib/types"
+import type { Habit, HabitCompletionStatus } from "@/lib/types"
 import { Skeleton } from "../ui/skeleton"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 
@@ -32,7 +32,7 @@ const HabitCalendar = ({ habit }: { habit: Habit }) => {
 
   const firstDayOfMonth = getDay(currentMonth); // 0 for Sunday, 1 for Monday, etc.
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: HabitCompletionStatus) => {
     switch (status) {
       case 'completed': return 'bg-primary text-primary-foreground';
       case 'missed': return 'bg-destructive/50';
@@ -62,14 +62,15 @@ const HabitCalendar = ({ habit }: { habit: Habit }) => {
         ))}
         {daysInMonth.map(day => {
           const dateStr = format(day, "yyyy-MM-dd");
-          const status = habit.completions[dateStr] || 'pending';
+          const completion = habit.completions[dateStr];
+          const status = completion?.status;
           return (
             <div
               key={dateStr}
               title={format(day, 'PPP')}
               className={cn(
                 "w-8 h-8 flex items-center justify-center rounded text-xs",
-                status !== 'pending' && getStatusColor(status),
+                status && getStatusColor(status),
                 isToday(day) && "ring-2 ring-ring ring-offset-2 ring-offset-background",
               )}
             >

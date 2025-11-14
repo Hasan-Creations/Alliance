@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
@@ -59,7 +60,7 @@ const taskSchema = z.object({
 });
 
 type TaskFormValues = z.infer<typeof taskSchema>;
-type SortKey = 'default' | 'priority' | 'dueDate';
+type SortKey = 'createdAt' | 'priority' | 'dueDate';
 type SortOrder = 'asc' | 'desc';
 
 const priorityColors: Record<Priority, string> = {
@@ -128,8 +129,8 @@ export const TodoView = React.memo(function TodoView() {
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [sortKey, setSortKey] = useState<SortKey>('default');
-  const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
+  const [sortKey, setSortKey] = useState<SortKey>('createdAt');
+  const [sortOrder, setSortOrder] = useState<SortOrder>('desc');
 
   const form = useForm<TaskFormValues>({
     resolver: zodResolver(taskSchema),
@@ -152,10 +153,17 @@ export const TodoView = React.memo(function TodoView() {
 
     if (editingTask) {
       const docRef = doc(firestore, 'users', user.uid, 'tasks', editingTask.id);
-      updateDocumentNonBlocking(docRef, taskData);
+      updateDocumentNonBlocking(docRef, {
+        ...taskData,
+        createdAt: editingTask.createdAt, // Preserve original createdAt
+      });
     } else {
       if (!tasksRef) return;
-      addDocumentNonBlocking(tasksRef, { ...taskData, completed: false });
+      addDocumentNonBlocking(tasksRef, { 
+        ...taskData, 
+        completed: false,
+        createdAt: Date.now(),
+      });
     }
     form.reset();
     setEditingTask(null);
@@ -219,6 +227,11 @@ export const TodoView = React.memo(function TodoView() {
           } else if (b.dueDate) {
             comparison = 1;
           }
+          break;
+        case 'createdAt':
+          const timeA = a.createdAt ?? new Date(a.dueDate ?? 0).getTime();
+          const timeB = b.createdAt ?? new Date(b.dueDate ?? 0).getTime();
+          comparison = timeA - timeB;
           break;
         default:
           return 0;
@@ -351,12 +364,12 @@ export const TodoView = React.memo(function TodoView() {
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="default">Default</SelectItem>
+            <SelectItem value="createdAt">Recently Added</SelectItem>
             <SelectItem value="priority">Priority</SelectItem>
             <SelectItem value="dueDate">Due Date</SelectItem>
           </SelectContent>
         </Select>
-        <Select value={sortOrder} onValueChange={(value: SortOrder) => setSortOrder(value)} disabled={sortKey === 'default'}>
+        <Select value={sortOrder} onValueChange={(value: SortOrder) => setSortOrder(value)}>
           <SelectTrigger className="w-[120px]">
             <SelectValue placeholder="Order" />
           </SelectTrigger>

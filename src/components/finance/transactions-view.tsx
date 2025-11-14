@@ -59,7 +59,7 @@ import { CalendarIcon, Plus, Trash2, PlusCircle, MinusCircle, ArrowRightLeft, Pe
 import type { Account, Transaction, TransactionCategory, ExpenseSubType } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { useCollection, useFirestore, useUser, useMemoFirebase, addDocumentNonBlocking, deleteDocumentNonBlocking, updateDocumentNonBlocking } from "@/firebase";
-import { collection, doc, increment } from "firebase/firestore";
+import { collection, doc, increment, writeBatch } from "firebase/firestore";
 import { Skeleton } from "../ui/skeleton";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 
@@ -109,6 +109,29 @@ export function TransactionsView() {
     return collection(firestore, 'users', user.uid, 'transactionCategories');
   }, [firestore, user]);
   const { data: categories, isLoading: isLoadingCategories } = useCollection<TransactionCategory>(categoriesRef);
+
+  // Lazy migration effect
+  useEffect(() => {
+    if (transactions && firestore && user) {
+        const transactionsToMigrate = transactions.filter(t => !t.createdAt);
+        if (transactionsToMigrate.length > 0) {
+            console.log(`Found ${transactionsToMigrate.length} transactions to migrate.`);
+            const batch = writeBatch(firestore);
+            transactionsToMigrate.forEach(t => {
+                const docRef = doc(firestore, 'users', user.uid, 'transactions', t.id);
+                // The getTime() will be based on user's local timezone but consistent for backfill
+                const newTimestamp = new Date(`${t.date}T00:00:00`).getTime();
+                batch.update(docRef, { createdAt: newTimestamp });
+            });
+            batch.commit().then(() => {
+                console.log("Successfully migrated old transactions.");
+            }).catch(error => {
+                console.error("Error migrating transactions: ", error);
+            });
+        }
+    }
+  }, [transactions, firestore, user]);
+
 
   const addTransaction = (data: Omit<Transaction, 'id'>) => {
     if (!transactionsRef || !firestore || !user || !accounts) return;
@@ -244,6 +267,7 @@ export function TransactionsView() {
       type: values.type,
       date: format(values.date, 'yyyy-MM-dd'),
       accountId: values.accountId,
+      createdAt: editingTransaction?.createdAt ?? Date.now(), // Preserve original createdAt or set new
       ...(values.toAccountId && { toAccountId: values.toAccountId }),
       ...(values.category && { category: values.category }),
       ...(values.type === 'expense' && { subType: values.subType as ExpenseSubType }),
@@ -323,7 +347,9 @@ export function TransactionsView() {
   }, [transactions]);
   
   const formatAmount = (value: number) => {
-    return new Intl.NumberFormat("en-US", {
+    return new Intl.NumberFormat("en-PK", {
+      style: "currency",
+      currency: "PKR",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value);
@@ -348,7 +374,11 @@ export function TransactionsView() {
       .filter(t => filterMonth === 'all' || format(parseISO(t.date), 'yyyy-MM') === filterMonth)
       .filter(t => filterType === 'all' || t.type === filterType)
       .filter(t => filterCategory === 'all' || t.type === 'transfer' || t.category === filterCategory)
-      .sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      .sort((a,b) => {
+          const dateA = a.createdAt || new Date(`${a.date}T00:00:00`).getTime();
+          const dateB = b.createdAt || new Date(`${b.date}T00:00:00`).getTime();
+          return dateB - dateA;
+      });
   }, [transactions, filterMonth, filterCategory, filterType]);
 
   const filteredTotal = useMemo(() => {
@@ -727,3 +757,10 @@ export function TransactionsView() {
     </div>
   );
 }
+
+    
+
+
+
+    
+

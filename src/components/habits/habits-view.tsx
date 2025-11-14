@@ -1,6 +1,7 @@
+
 "use client";
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -44,7 +45,11 @@ export const HabitsView = React.memo(function HabitsView() {
 
   const addHabit = useCallback((name: string) => {
     if (!habitsRef) return;
-    addDocumentNonBlocking(habitsRef, { name, completions: {} });
+    addDocumentNonBlocking(habitsRef, { 
+      name, 
+      completions: {},
+      createdAt: Date.now(),
+    });
   }, [habitsRef]);
 
   const deleteHabit = useCallback((id: string) => {
@@ -94,6 +99,11 @@ export const HabitsView = React.memo(function HabitsView() {
     setIsDeleteDialogOpen(true);
   }, []);
 
+  const sortedHabits = useMemo(() => {
+    if (!habits) return [];
+    return [...habits].sort((a, b) => b.createdAt - a.createdAt);
+  }, [habits]);
+
   return (
     <div className="container mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -139,13 +149,13 @@ export const HabitsView = React.memo(function HabitsView() {
                 <Skeleton className="h-8 w-full" />
                 <Skeleton className="h-8 w-full" />
              </div>
-          ) : !habits || habits.length === 0 ? (
+          ) : !sortedHabits || sortedHabits.length === 0 ? (
              <div className="h-48 flex items-center justify-center text-center text-muted-foreground">
                 <p>No habits yet. Add one to get started!</p>
             </div>
           ) : (
             <div className="grid grid-cols-2 gap-x-4 gap-y-2">
-              {habits.map((habit) => {
+              {sortedHabits.map((habit) => {
                 const isCompleted = habit.completions[todayStr] === 'completed';
                 return (
                   <div key={habit.id} className="flex items-center justify-between">
@@ -179,7 +189,7 @@ export const HabitsView = React.memo(function HabitsView() {
         </CardContent>
       </Card>
 
-      <HabitHistoryView habits={habits ?? []} isLoading={isLoadingHabits} />
+      <HabitHistoryView habits={sortedHabits ?? []} isLoading={isLoadingHabits} />
 
       <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <DialogContent>

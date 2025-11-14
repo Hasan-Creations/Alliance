@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -53,12 +54,17 @@
         "completed": {
           "type": "boolean",
           "description": "Indicates whether the task is completed or not."
+        },
+        "createdAt": {
+          "type": "number",
+          "description": "The timestamp (in milliseconds) when the task was created."
         }
       },
       "required": [
         "title",
         "priority",
-        "completed"
+        "completed",
+        "createdAt"
       ]
     },
     "Habit": {
@@ -80,11 +86,16 @@
               "missed"
             ]
           }
+        },
+        "createdAt": {
+          "type": "number",
+          "description": "The timestamp (in milliseconds) when the habit was created."
         }
       },
       "required": [
         "name",
-        "completions"
+        "completions",
+        "createdAt"
       ]
     },
     "Account": {
@@ -148,6 +159,10 @@
             "Savings"
           ],
           "description": "Optional subtype for expenses."
+        },
+        "createdAt": {
+          "type": "number",
+          "description": "The timestamp (in milliseconds) when the transaction was created."
         }
       },
       "required": [
@@ -156,7 +171,8 @@
         "amount",
         "description",
         "category",
-        "type"
+        "type",
+        "createdAt"
       ]
     },
     "TransactionCategory": {

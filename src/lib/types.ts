@@ -12,6 +12,7 @@ export interface Task {
   priority: Priority;
   dueDate: string | null;
   completed: boolean;
+  createdAt: number;
 }
 
 export interface Habit {
@@ -19,6 +20,7 @@ export interface Habit {
   name: string;
   // Map of date (YYYY-MM-DD) to completion status
   completions: Record<string, HabitCompletionStatus>;
+  createdAt: number;
 }
 
 export interface Account {
@@ -37,6 +39,7 @@ export interface Transaction {
   category?: string; // Optional: not used for transfers
   type: TransactionType;
   subType?: ExpenseSubType; // For expenses: 'Need', 'Want'
+  createdAt: number; // Timestamp in milliseconds
 }
 
 export interface TransactionCategory {

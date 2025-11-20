@@ -1,12 +1,17 @@
 
+'use client';
+
 import { Button } from "@/components/ui/button";
 import { AppLogo } from "@/components/app-logo";
 import Link from "next/link";
 import Image from "next/image";
 import { PlaceHolderImages } from "@/lib/placeholder-images";
+import { useRemoteConfigValue } from "@/firebase";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function WelcomePage() {
   const welcomeImage = PlaceHolderImages[0];
+  const { value: welcomeHeadline, loading: isLoadingHeadline } = useRemoteConfigValue('welcome_headline');
 
   return (
     <div className="flex min-h-screen flex-col bg-background">
@@ -17,9 +22,13 @@ export default function WelcomePage() {
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-16 items-center">
             <div className="text-center md:text-left">
-              <h1 className="text-4xl md:text-5xl font-bold font-headline text-foreground mb-4">
-                Organize your life, achieve your goals.
-              </h1>
+              {isLoadingHeadline ? (
+                <Skeleton className="h-24 w-full" />
+              ) : (
+                <h1 className="text-4xl md:text-5xl font-bold font-headline text-foreground mb-4">
+                  {welcomeHeadline?.asString() || "Organize your life, achieve your goals."}
+                </h1>
+              )}
               <p className="text-lg text-muted-foreground mb-8">
                 Alliance is the all-in-one platform to manage your tasks, track your habits, and master your finances. Stop juggling apps and start building a more organized life today.
               </p>

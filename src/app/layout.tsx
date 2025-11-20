@@ -6,6 +6,7 @@ import './globals.css';
 import { cn } from '@/lib/utils';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppViewContextProvider } from '@/context/app-view-context';
+import { FirebaseMessagingListener } from '@/components/FirebaseMessagingListener';
 
 export const metadata: Metadata = {
   title: 'Alliance',
@@ -32,6 +33,7 @@ export default function RootLayout({
       </head>
       <body className={cn("font-body antialiased", "overflow-x-hidden")}>
         <FirebaseClientProvider>
+          <FirebaseMessagingListener />
           <SidebarProvider>
             <AppViewContextProvider>
               {children}

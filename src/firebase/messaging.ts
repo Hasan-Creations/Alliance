@@ -2,7 +2,7 @@
 
 import { getApp } from 'firebase/app';
 import { getMessaging, getToken, onMessage } from 'firebase/messaging';
-import { firebaseConfig } from './config';
+import { toast } from '@/hooks/use-toast';
 
 // This function is designed to be called ONCE
 export const requestPermissionAndGetToken = async () => {
@@ -46,10 +46,13 @@ export const requestPermissionAndGetToken = async () => {
 // Function to set up the foreground message listener
 export const onForegroundMessage = () => {
   const messaging = getMessaging(getApp());
-  onMessage(messaging, (payload) => {
+  const unsubscribe = onMessage(messaging, (payload) => {
     console.log('Foreground message received. ', payload);
-    // Here you could display the notification to the user in-app,
-    // for example using a toast notification.
-    // For this example, we'll just log it.
+    // Display the notification as a toast
+    toast({
+        title: payload.notification?.title || "New Notification",
+        description: payload.notification?.body || "",
+    });
   });
+  return unsubscribe;
 };

@@ -71,9 +71,9 @@ export default function LoginPage() {
         });
         return;
       }
-      initiateEmailSignUp(auth, email, password, name);
+      initiateEmailSignUp(auth, email, password, name, toast);
     } else {
-      initiateEmailSignIn(auth, email, password);
+      initiateEmailSignIn(auth, email, password, toast);
     }
   };
 

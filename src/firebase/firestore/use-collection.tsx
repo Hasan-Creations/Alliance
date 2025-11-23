@@ -95,13 +95,19 @@ export function useCollection<T = any>(
           operation: 'list',
           path,
         })
+        
+        // Only set the error if it hasn't been set before to avoid loops
+        setError(currentError => {
+            if (currentError?.message === contextualError.message) {
+                return currentError;
+            }
+            // trigger global error propagation only once
+            errorEmitter.emit('permission-error', contextualError);
+            return contextualError;
+        });
 
-        setError(contextualError)
-        setData(null)
-        setIsLoading(false)
-
-        // trigger global error propagation
-        errorEmitter.emit('permission-error', contextualError);
+        setData(null);
+        setIsLoading(false);
       }
     );
 

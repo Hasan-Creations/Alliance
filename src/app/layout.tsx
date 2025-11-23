@@ -4,8 +4,6 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Toaster } from "@/components/ui/toaster";
 import './globals.css';
 import { cn } from '@/lib/utils';
-import { SidebarProvider } from '@/components/ui/sidebar';
-import { AppViewContextProvider } from '@/context/app-view-context';
 import { FirebaseMessagingListener } from '@/components/FirebaseMessagingListener';
 import { NotificationPrompter } from '@/components/NotificationPrompter';
 import { ThemeProvider } from '@/components/theme-provider';
@@ -46,11 +44,7 @@ export default function RootLayout({
           <FirebaseClientProvider>
             <FirebaseMessagingListener />
             <NotificationPrompter />
-            <SidebarProvider>
-              <AppViewContextProvider>
-                {children}
-              </AppViewContextProvider>
-            </SidebarProvider>
+            {children}
           </FirebaseClientProvider>
           <Toaster />
         </ThemeProvider>

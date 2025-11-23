@@ -41,7 +41,7 @@ const HabitCalendar = ({ habit }: { habit: Habit }) => {
   };
 
   return (
-    <div className="p-4 border rounded-lg">
+    <div className="p-3 border rounded-lg">
       <div className="flex items-center justify-between mb-2">
         <h4 className="font-semibold">{habit.name}</h4>
         <div className="flex items-center gap-2">
@@ -87,11 +87,11 @@ const HabitCalendar = ({ habit }: { habit: Habit }) => {
 export function HabitHistoryView({ habits, isLoading }: HabitHistoryViewProps) {
   return (
     <Card>
-      <CardHeader>
+      <CardHeader className="p-3">
         <CardTitle>Habit History</CardTitle>
         <CardDescription>Review your consistency with a compact heat map view.</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="p-3">
         {isLoading ? (
             <Skeleton className="h-48 w-full" />
         ) : habits.length === 0 ? (

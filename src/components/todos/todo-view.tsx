@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useState, useMemo, useCallback } from "react";
@@ -229,9 +228,7 @@ export const TodoView = React.memo(function TodoView() {
           }
           break;
         case 'createdAt':
-          const timeA = a.createdAt ?? new Date(a.dueDate ?? 0).getTime();
-          const timeB = b.createdAt ?? new Date(b.dueDate ?? 0).getTime();
-          comparison = timeA - timeB;
+          comparison = (a.createdAt ?? 0) - (b.createdAt ?? 0);
           break;
         default:
           return 0;

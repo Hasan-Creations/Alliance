@@ -1,24 +1,14 @@
 
 'use client';
 
-import React, { useContext } from "react";
-import { useSidebar } from "@/components/ui/sidebar";
-import { MainNav } from "@/components/main-nav";
-import { BottomNav } from "@/components/bottom-nav";
+import React from "react";
 import { useUser } from "@/firebase";
-import { DashboardView } from '@/components/dashboard/dashboard-view';
-import { TodoView } from '@/components/todos/todo-view';
-import { HabitsView } from '@/components/habits/habits-view';
-import { FinanceView } from '@/components/finance/finance-view';
-import { SettingsView } from '@/components/settings/settings-view';
 import WelcomePage from "./welcome/page";
-import { AppViewContext } from "@/context/app-view-context";
 import { AllianceSpinner } from "@/components/ui/alliance-spinner";
+import { AppLayout } from "@/components/app-layout";
 
 export default function AppPage() {
   const { user, isUserLoading } = useUser();
-  const { view } = useContext(AppViewContext);
-  const { isMobile } = useSidebar();
   
   if (isUserLoading) {
     return (
@@ -35,32 +25,5 @@ export default function AppPage() {
     return <WelcomePage />;
   }
   
-  const renderView = () => {
-    switch (view) {
-      case 'dashboard':
-        return <DashboardView />;
-      case 'todos':
-        return <TodoView />;
-      case 'habits':
-        return <HabitsView />;
-      case 'finance':
-        return <FinanceView />;
-      case 'settings':
-        return <SettingsView />;
-      default:
-        return <DashboardView />;
-    }
-  };
-
-  return (
-    <div className="flex min-h-screen w-full">
-      <MainNav />
-      <main className="flex-1 flex flex-col bg-background w-full">
-        <div className="flex-1 py-4 sm:py-6 lg:py-8 pb-24 md:pb-8">
-          {renderView()}
-        </div>
-      </main>
-      {isMobile && <BottomNav />}
-    </div>
-  );
+  return <AppLayout />;
 }

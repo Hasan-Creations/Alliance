@@ -47,33 +47,33 @@
     --card-foreground: 266 80% 92%;
     --popover: 273 30% 10%;
     --popover-foreground: 266 80% 92%;
-    --primary: 266 89% 86%;
+    --primary: 273 56% 65%;
     --primary-foreground: 273 56% 15%;
     --secondary: 273 30% 25%;
     --secondary-foreground: 266 80% 92%;
     --muted: 273 30% 20%;
     --muted-foreground: 266 50% 70%;
-    --accent: 236 68% 70%;
+    --accent: 236 50% 65%;
     --accent-foreground: 236 60% 15%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
     --border: 273 30% 25%;
     --input: 273 30% 25%;
-    --ring: 236 68% 70%;
-    --chart-1: 273 56% 60%;
-    --chart-2: 236 68% 70%;
-    --chart-3: 266 70% 55%;
-    --chart-4: 273 50% 45%;
-    --chart-5: 236 40% 35%;
+    --ring: 236 50% 65%;
+    --chart-1: 273 50% 55%;
+    --chart-2: 236 50% 60%;
+    --chart-3: 266 60% 50%;
+    --chart-4: 273 40% 45%;
+    --chart-5: 236 30% 35%;
 
     --sidebar-background: 273 30% 10%;
     --sidebar-foreground: 266 80% 92%;
-    --sidebar-primary: 266 89% 86%;
+    --sidebar-primary: 273 56% 65%;
     --sidebar-primary-foreground: 273 56% 15%;
     --sidebar-accent: 273 30% 20%;
     --sidebar-accent-foreground: 266 89% 92%;
     --sidebar-border: 273 30% 25%;
-    --sidebar-ring: 266 89% 86%;
+    --sidebar-ring: 273 56% 65%;
   }
 }
 
@@ -93,38 +93,34 @@
     animation: spinner-spin 2s linear infinite;
     filter: drop-shadow(0 0 8px hsl(var(--primary) / 0.3));
   }
-  .alliance-spinner circle:nth-child(1) {
-    stroke-linecap: round;
-    animation: spinner-arc-1 1.5s ease-in-out infinite;
-  }
-  .alliance-spinner circle:nth-child(2) {
-    stroke-linecap: round;
-    animation: spinner-arc-2 1.5s ease-in-out infinite;
-  }
-  .alliance-spinner circle:nth-child(3) {
-    stroke-linecap: round;
-    animation: spinner-arc-3 1.5s ease-in-out infinite;
-  }
 
   @keyframes spinner-spin {
     100% {
       transform: rotate(360deg);
     }
   }
-  @keyframes spinner-arc-1 {
-    0% { stroke-dasharray: 1 200; stroke-dashoffset: 0; opacity: 1; }
-    50% { stroke-dasharray: 100 100; stroke-dashoffset: -75; opacity: 0.8; }
-    100% { stroke-dasharray: 1 200; stroke-dashoffset: -198; opacity: 1; }
+
+  /* New Gradient Spinner */
+  @keyframes gradient-spin {
+    to {
+      transform: rotate(360deg);
+    }
   }
-  @keyframes spinner-arc-2 {
-    0% { stroke-dasharray: 1 100; stroke-dashoffset: 0; opacity: 0.9; }
-    50% { stroke-dasharray: 50 50; stroke-dashoffset: -35; opacity: 0.7; }
-    100% { stroke-dasharray: 1 100; stroke-dashoffset: -98; opacity: 0.9; }
+
+  .gradient-spinner {
+    background-image: linear-gradient(hsl(var(--primary)) 35%, hsl(var(--accent)));
+    animation: gradient-spin 1.7s linear infinite;
+    border-radius: 50%;
+    filter: blur(1px);
+    box-shadow: 
+      0px -5px 20px 0px hsl(var(--primary) / 0.6),
+      0px 5px 20px 0px hsl(var(--accent) / 0.6);
   }
-  @keyframes spinner-arc-3 {
-    0% { stroke-dasharray: 1 50; stroke-dashoffset: 0; opacity: 0.8; }
-    50% { stroke-dasharray: 25 25; stroke-dashoffset: -15; opacity: 0.6; }
-    100% { stroke-dasharray: 1 50; stroke-dashoffset: -48; opacity: 0.8; }
+
+  .gradient-spinner-inner {
+    background-color: hsl(var(--background));
+    border-radius: 50%;
+    filter: blur(8px);
   }
 
   /* Enhanced Cosmic Spinner */
@@ -195,7 +191,7 @@
     }
   }
 
-  /* Enhanced Quantum Spinner */
+  /* Quantum Spinner */
   .animate-quantum-1 {
     animation: quantum-spin 2.5s linear infinite;
   }
@@ -216,7 +212,6 @@
     50% { 
       transform: rotate(180deg) scale(0.85);
       opacity: 0.4;
-      border-color: hsl(var(--accent));
     }
     100% { 
       transform: rotate(360deg) scale(1);
@@ -224,36 +219,7 @@
     }
   }
 
-  /* Enhanced Orbit Spinner */
-  .animate-orbit-1 {
-    animation: orbit-spin 2s linear infinite;
-  }
-  
-  .animate-orbit-2 {
-    animation: orbit-spin 1.6s linear infinite;
-  }
-  
-  .animate-orbit-3 {
-    animation: orbit-spin 1.2s linear infinite;
-  }
-  
-  .animate-orbit-4 {
-    animation: orbit-spin 0.8s linear infinite;
-  }
-
-  @keyframes orbit-spin {
-    0% { 
-      transform: rotate(0deg) translateX(calc(50% - 8px)) rotate(0deg) scale(1);
-    }
-    50% { 
-      transform: rotate(180deg) translateX(calc(50% - 8px)) rotate(-180deg) scale(1.2);
-    }
-    100% { 
-      transform: rotate(360deg) translateX(calc(50% - 8px)) rotate(-360deg) scale(1);
-    }
-  }
-
-  /* Enhanced Nebula Spinner */
+  /* Nebula Spinner */
   .animate-nebula-pulse {
     animation: nebula-pulse 2.5s ease-in-out infinite;
   }
@@ -262,122 +228,10 @@
     0%, 100% { 
       opacity: 0.3;
       transform: scale(1);
-      filter: blur(0px);
-    }
-    25% {
-      opacity: 0.6;
-      transform: scale(1.05);
-      filter: blur(1px);
     }
     50% { 
       opacity: 0.8;
       transform: scale(1.1);
-      filter: blur(2px);
-    }
-    75% {
-      opacity: 0.6;
-      transform: scale(1.05);
-      filter: blur(1px);
-    }
-  }
-
-  /* New: Aurora Spinner Effect */
-  .aurora-spinner {
-    background: conic-gradient(
-      from 0deg at 50% 50%,
-      hsl(var(--primary) / 0.8),
-      hsl(var(--accent) / 0.6),
-      hsl(var(--secondary) / 0.7),
-      hsl(var(--primary) / 0.8)
-    );
-    animation: aurora-rotate 3s linear infinite;
-    filter: blur(8px);
-  }
-
-  @keyframes aurora-rotate {
-    0% { transform: rotate(0deg) scale(1); }
-    50% { transform: rotate(180deg) scale(1.1); }
-    100% { transform: rotate(360deg) scale(1); }
-  }
-
-  /* New: Hyperspace Spinner */
-  .hyperspace-spinner {
-    position: relative;
-    overflow: hidden;
-  }
-
-  .hyperspace-spinner::before {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: conic-gradient(
-      transparent,
-      hsl(var(--accent) / 0.9),
-      transparent 30%
-    );
-    animation: hyperspace-spin 1.5s linear infinite;
-  }
-
-  @keyframes hyperspace-spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-  }
-
-  /* New: Particle Spinner */
-  .particle-spinner {
-    position: relative;
-  }
-
-  .particle {
-    position: absolute;
-    width: 4px;
-    height: 4px;
-    border-radius: 50%;
-    animation: particle-float 2s ease-in-out infinite;
-  }
-
-  .particle:nth-child(1) { 
-    background: hsl(var(--primary));
-    animation-delay: 0s;
-    top: 10%;
-    left: 50%;
-  }
-  .particle:nth-child(2) { 
-    background: hsl(var(--accent));
-    animation-delay: 0.3s;
-    top: 20%;
-    left: 80%;
-  }
-  .particle:nth-child(3) { 
-    background: hsl(var(--secondary));
-    animation-delay: 0.6s;
-    top: 50%;
-    left: 90%;
-  }
-  .particle:nth-child(4) { 
-    background: hsl(var(--chart-1));
-    animation-delay: 0.9s;
-    top: 80%;
-    left: 70%;
-  }
-  .particle:nth-child(5) { 
-    background: hsl(var(--chart-2));
-    animation-delay: 1.2s;
-    top: 90%;
-    left: 40%;
-  }
-
-  @keyframes particle-float {
-    0%, 100% { 
-      transform: translateY(0) scale(1);
-      opacity: 0;
-    }
-    50% { 
-      transform: translateY(-20px) scale(1.5);
-      opacity: 1;
     }
   }
 }

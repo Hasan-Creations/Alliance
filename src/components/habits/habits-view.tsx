@@ -141,7 +141,7 @@ export const HabitsView = React.memo(function HabitsView() {
       </div>
       
       <Card>
-        <CardContent className="pt-6">
+        <CardContent className="p-3">
           {isLoadingHabits ? (
              <div className="grid grid-cols-2 gap-4">
                 <Skeleton className="h-8 w-full" />

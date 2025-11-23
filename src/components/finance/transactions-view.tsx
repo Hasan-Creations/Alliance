@@ -738,10 +738,10 @@ export function TransactionsView() {
                     </TableCell>
                     <TableCell className="text-right p-2">
                       <div className="flex flex-col items-center">
-                        <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive" onClick={() => deleteTransaction(transaction)}>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive hover:text-destructive" onClick={() => deleteTransaction(transaction)} aria-label="Delete transaction">
                           <Trash2 className="h-4 w-4" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => handleEdit(transaction)}>
+                        <Button variant="ghost" size="icon" className="h-6 w-6 text-muted-foreground hover:text-primary" onClick={() => handleEdit(transaction)} aria-label="Edit transaction">
                           <Pencil className="h-4 w-4" />
                         </Button>
                       </div>

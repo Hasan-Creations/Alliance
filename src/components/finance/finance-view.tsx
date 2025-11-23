@@ -30,3 +30,4 @@ export const FinanceView = React.memo(function FinanceView() {
     </div>
   );
 });
+FinanceView.displayName = 'FinanceView';

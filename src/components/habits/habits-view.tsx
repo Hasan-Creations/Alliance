@@ -101,7 +101,7 @@ export const HabitsView = React.memo(function HabitsView() {
 
   const sortedHabits = useMemo(() => {
     if (!habits) return [];
-    return [...habits].sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    return [...habits].sort((a, b) => (a.createdAt || 0) - (b.createdAt || 0));
   }, [habits]);
 
   return (
@@ -178,6 +178,7 @@ export const HabitsView = React.memo(function HabitsView() {
                       size="icon" 
                       className="h-6 w-6 ml-2 text-muted-foreground hover:text-destructive"
                       onClick={() => openDeleteDialog(habit)}
+                      aria-label={`Delete habit: ${habit.name}`}
                     >
                         <Trash2 className="h-4 w-4" />
                     </Button>
@@ -207,3 +208,4 @@ export const HabitsView = React.memo(function HabitsView() {
     </div>
   );
 });
+HabitsView.displayName = 'HabitsView';

@@ -112,3 +112,4 @@ export const SettingsView = React.memo(function SettingsView() {
     </div>
   );
 });
+SettingsView.displayName = 'SettingsView';

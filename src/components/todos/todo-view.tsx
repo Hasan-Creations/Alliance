@@ -77,9 +77,11 @@ const TaskItem = React.memo(function TaskItem({ task, onToggle, onEdit, onDelete
           checked={task.completed}
           onCheckedChange={() => onToggle(task.id)}
           className="mt-1"
+          aria-labelledby={`task-title-${task.id}`}
         />
         <div className="flex-1 grid gap-1 min-w-0">
           <label
+            id={`task-title-${task.id}`}
             htmlFor={`task-${task.id}`}
             className={cn(
               "font-medium cursor-pointer break-words",
@@ -105,8 +107,8 @@ const TaskItem = React.memo(function TaskItem({ task, onToggle, onEdit, onDelete
           </div>
         </div>
         <div className="flex items-center gap-1 sm:gap-2">
-          <Button variant="ghost" size="sm" onClick={() => onEdit(task)}>Edit</Button>
-          <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive h-8 w-8" onClick={() => onDelete(task.id)}>
+          <Button variant="ghost" size="sm" onClick={() => onEdit(task)} aria-label={`Edit task: ${task.title}`}>Edit</Button>
+          <Button variant="ghost" size="icon" className="text-destructive hover:text-destructive h-8 w-8" onClick={() => onDelete(task.id)} aria-label={`Delete task: ${task.title}`}>
             <Trash2 className="h-4 w-4"/>
           </Button>
         </div>
@@ -114,6 +116,7 @@ const TaskItem = React.memo(function TaskItem({ task, onToggle, onEdit, onDelete
     </Card>
   )
 });
+TaskItem.displayName = 'TaskItem';
 
 export const TodoView = React.memo(function TodoView() {
   const { user } = useUser();
@@ -228,6 +231,7 @@ export const TodoView = React.memo(function TodoView() {
           }
           break;
         case 'createdAt':
+          // Use 0 as a fallback for tasks without a createdAt timestamp
           comparison = (a.createdAt ?? 0) - (b.createdAt ?? 0);
           break;
         default:
@@ -399,3 +403,4 @@ export const TodoView = React.memo(function TodoView() {
     </div>
   );
 });
+TodoView.displayName = 'TodoView';

@@ -21,3 +21,4 @@ export const DashboardView = React.memo(function DashboardView() {
     </div>
   );
 });
+DashboardView.displayName = 'DashboardView';

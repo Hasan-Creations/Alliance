@@ -54,7 +54,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { format, parseISO } from "date-fns";
-import { toZonedTime } from 'date-fns-tz';
 import { CalendarIcon, Plus, Trash2, PlusCircle, MinusCircle, ArrowRightLeft, Pencil } from "lucide-react";
 import type { Account, Transaction, TransactionCategory, ExpenseSubType } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -729,7 +728,7 @@ export function TransactionsView() {
                   <TableRow key={transaction.id}>
                     <TableCell className="p-2">
                       <div className="font-medium">{transaction.description}</div>
-                      <div className="text-sm text-muted-foreground">{format(toZonedTime(new Date(`${transaction.date}T00:00:00`), Intl.DateTimeFormat().resolvedOptions().timeZone), 'M/d/yy')}</div>
+                      <div className="text-sm text-muted-foreground">{format(parseISO(transaction.date), 'M/d/yy')}</div>
                     </TableCell>
                     <TableCell className="p-2">{renderTransactionDetails(transaction)}</TableCell>
                     <TableCell className={cn("text-right font-medium p-2", transaction.type === 'income' ? 'text-primary' : transaction.type === 'expense' ? 'text-destructive' : 'text-muted-foreground')}>
@@ -764,3 +763,4 @@ export function TransactionsView() {
     
 
     
+

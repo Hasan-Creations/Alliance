@@ -1,0 +1,14 @@
+# See https://www.robotstxt.org/robotstxt.html for documentation on how to use the robots.txt file
+#
+# To allow all crawlers to access your site, use:
+# User-agent: *
+# Allow: /
+#
+# To block all crawlers from accessing your site, use:
+# User-agent: *
+# Disallow: /
+
+User-agent: *
+Allow: /
+
+Sitemap: https://myalliance.vercel.app/sitemap.xml

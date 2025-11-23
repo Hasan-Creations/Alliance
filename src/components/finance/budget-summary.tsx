@@ -66,16 +66,16 @@ export function BudgetSummary() {
 
     const monthlyTransactions = transactions.filter(t => isSameMonth(parseISO(t.date), activeMonth));
     const savingsAccount = accounts.find(a => a.name === 'Savings Account');
-    
+
     const totalIncome = monthlyTransactions
       .filter(t => t.type === 'income')
       .reduce((acc, t) => acc + t.amount, 0);
-      
+
     const expenses = monthlyTransactions.filter(t => t.type === 'expense');
 
     const needsTotal = expenses.filter(e => e.subType === 'Need').reduce((acc, e) => acc + e.amount, 0);
     const wantsTotal = expenses.filter(e => e.subType === 'Want').reduce((acc, e) => acc + e.amount, 0);
-    
+
     // This is the amount transferred TO the savings account this month
     const savingsInflow = monthlyTransactions
       .filter(t => t.type === 'transfer' && t.toAccountId === savingsAccount?.id)
@@ -115,24 +115,24 @@ export function BudgetSummary() {
   if (isLoadingTransactions) {
     return (
       <Card>
-        <CardHeader>
+        <CardHeader className="p-3">
           <Skeleton className="h-8 w-48" />
           <Skeleton className="h-4 w-64" />
         </CardHeader>
-        <CardContent className="grid gap-6 md:grid-cols-2">
+        <CardContent className="p-3 grid gap-4 md:grid-cols-2">
           <div className="flex flex-col justify-center">
-            <Skeleton className="mx-auto aspect-square w-full max-w-[300px] rounded-full" />
+            <Skeleton className="mx-auto aspect-square w-full max-w-[250px] rounded-full" />
           </div>
           <div className="grid gap-4">
-            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-20 w-full" />
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <Skeleton className="h-24 w-full" />
-              <Skeleton className="h-24 w-full" />
+              <Skeleton className="h-20 w-full" />
+              <Skeleton className="h-20 w-full" />
             </div>
-            <Skeleton className="h-24 w-full" />
+            <Skeleton className="h-20 w-full" />
           </div>
         </CardContent>
-        <CardFooter>
+        <CardFooter className="p-3">
           <Skeleton className="h-4 w-full max-w-sm" />
         </CardFooter>
       </Card>
@@ -140,14 +140,14 @@ export function BudgetSummary() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       <Card>
-        <CardHeader>
+        <CardHeader className="p-3">
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>Budget Summary</CardTitle>
               <CardDescription>
-                Your financial breakdown for {format(activeMonth, "MMMM yyyy")}.
+                Financial breakdown for {format(activeMonth, "MMMM yyyy")}.
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
@@ -160,11 +160,11 @@ export function BudgetSummary() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="grid gap-6 md:grid-cols-2">
+        <CardContent className="p-3 grid gap-4 md:grid-cols-2">
           <div className="flex flex-col justify-center">
             <ChartContainer
               config={chartConfig}
-              className="mx-auto aspect-square max-h-[300px] min-h-[200px]"
+              className="mx-auto aspect-square max-h-[250px] min-h-[180px]"
             >
               {totalSpending > 0 ? (
                 <PieChart>
@@ -200,69 +200,67 @@ export function BudgetSummary() {
               )}
             </ChartContainer>
           </div>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 gap-2">
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
                 <CardTitle className="text-sm font-medium">Total Income</CardTitle>
                 <TrendingUp className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-3 pt-0">
                 <div className="text-2xl font-bold">{formatCurrency(totalIncome)}</div>
               </CardContent>
             </Card>
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-muted-foreground" />
-                    <CardTitle className="text-sm font-medium">Needs</CardTitle>
-                  </div>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium">Needs</CardTitle>
+                </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-3 pt-0">
                 <div className="text-xl font-bold">{formatCurrency(needsTotal)}</div>
               </CardContent>
             </Card>
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
                 <div className="flex items-center gap-2">
-                    <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-                    <CardTitle className="text-sm font-medium">Wants</CardTitle>
+                  <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium">Wants</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-3 pt-0">
                 <div className="text-xl font-bold">{formatCurrency(wantsTotal)}</div>
               </CardContent>
             </Card>
             <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
                 <div className="flex items-center gap-2">
-                    <Wallet className="h-4 w-4 text-muted-foreground" />
-                    <CardTitle className="text-sm font-medium">Added to Savings</CardTitle>
+                  <Wallet className="h-4 w-4 text-muted-foreground" />
+                  <CardTitle className="text-sm font-medium">To Savings</CardTitle>
                 </div>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-3 pt-0">
                 <div className="text-xl font-bold">{formatCurrency(savingsTotal)}</div>
               </CardContent>
             </Card>
             <Card className="col-span-2">
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 p-3 pb-1">
                 <CardTitle className="text-sm font-medium">Remaining to Budget</CardTitle>
                 <PiggyBank className="h-4 w-4 text-muted-foreground" />
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-3 pt-0">
                 <div className="text-2xl font-bold">{formatCurrency(remainingToBudget)}</div>
                 <p className="text-xs text-muted-foreground">
-                  Monthly Income - Monthly Expenses
+                  Income - Expenses
                 </p>
               </CardContent>
             </Card>
           </div>
         </CardContent>
-        <CardFooter>
+        <CardFooter className="p-4 pt-0">
           <p className="text-xs text-muted-foreground">This summary is based on your logged transactions for the selected month.</p>
         </CardFooter>
       </Card>
     </div>
   )
 }
-
-    

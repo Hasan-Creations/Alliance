@@ -85,5 +85,19 @@ service cloud.firestore {
         allow update: if isOwner(userId);
         allow delete: if false; // Generally, settings are updated, not deleted.
     }
+
+    /**
+     * @description Allows a user to manage their own FCM tokens.
+     * @path /users/{userId}/fcmTokens/{tokenId}
+     * @allow (get, list, create, delete) - User can manage their own tokens.
+     * @deny (update) - Tokens are created and deleted, not updated.
+     */
+    match /users/{userId}/fcmTokens/{tokenId} {
+      allow get: if isOwner(userId);
+      allow list: if isOwner(userId);
+      allow create: if isOwner(userId);
+      allow delete: if isOwner(userId);
+      allow update: if false;
+    }
   }
 }

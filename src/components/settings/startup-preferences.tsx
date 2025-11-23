@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -22,7 +21,11 @@ const startupOptions: { value: View, label: string }[] = [
   { value: 'finance', label: 'Finance Tracker' },
 ];
 
-export function StartupPreferences() {
+interface StartupPreferencesProps {
+  compact?: boolean;
+}
+
+export function StartupPreferences({ compact = false }: StartupPreferencesProps) {
   const { user } = useUser();
   const firestore = useFirestore();
 
@@ -51,7 +54,12 @@ export function StartupPreferences() {
   };
   
   if (isLoading) {
-    return (
+    return compact ? (
+      <div className="space-y-2">
+        <Skeleton className="h-4 w-32" />
+        <Skeleton className="h-9 w-full" />
+      </div>
+    ) : (
       <Card>
         <CardHeader>
           <Skeleton className="h-6 w-1/2" />
@@ -61,7 +69,32 @@ export function StartupPreferences() {
           <Skeleton className="h-10 w-full" />
         </CardContent>
       </Card>
-    )
+    );
+  }
+
+  if (compact) {
+    return (
+      <div className="space-y-3">
+        <div className="space-y-2">
+          <Label htmlFor="startup-page" className="text-sm">Default Startup View</Label>
+          <Select value={selectedPage} onValueChange={handleSelectChange}>
+            <SelectTrigger id="startup-page" className="h-9">
+              <SelectValue placeholder="Select a view" />
+            </SelectTrigger>
+            <SelectContent>
+              {startupOptions.map(option => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <p className="text-xs text-muted-foreground">
+          Choose which view opens when you start the app
+        </p>
+      </div>
+    );
   }
 
   return (

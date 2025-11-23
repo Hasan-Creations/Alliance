@@ -73,14 +73,14 @@ const transactionSchema = z.object({
   subType: z.enum(["Need", "Want"]).optional(),
   date: z.date({ required_error: "A date is required." }),
 }).refine(data => data.type !== 'transfer' || (data.type === 'transfer' && data.toAccountId), {
-    message: "Destination account is required for transfers",
-    path: ["toAccountId"],
+  message: "Destination account is required for transfers",
+  path: ["toAccountId"],
 }).refine(data => data.type !== 'transfer' || data.accountId !== data.toAccountId, {
-    message: "Source and destination accounts must be different",
-    path: ["toAccountId"],
+  message: "Source and destination accounts must be different",
+  path: ["toAccountId"],
 }).refine(data => data.type === 'transfer' || (data.category && data.category.length > 0), {
-    message: "Category is required for income and expenses",
-    path: ["category"],
+  message: "Category is required for income and expenses",
+  path: ["category"],
 });
 
 type TransactionFormValues = z.infer<typeof transactionSchema>;
@@ -113,22 +113,22 @@ export function TransactionsView() {
   // Lazy migration effect
   useEffect(() => {
     if (transactions && firestore && user) {
-        const transactionsToMigrate = transactions.filter(t => !t.createdAt);
-        if (transactionsToMigrate.length > 0) {
-            console.log(`Found ${transactionsToMigrate.length} transactions to migrate.`);
-            const batch = writeBatch(firestore);
-            transactionsToMigrate.forEach(t => {
-                const docRef = doc(firestore, 'users', user.uid, 'transactions', t.id);
-                // The getTime() will be based on user's local timezone but consistent for backfill
-                const newTimestamp = new Date(`${t.date}T00:00:00`).getTime();
-                batch.update(docRef, { createdAt: newTimestamp });
-            });
-            batch.commit().then(() => {
-                console.log("Successfully migrated old transactions.");
-            }).catch(error => {
-                console.error("Error migrating transactions: ", error);
-            });
-        }
+      const transactionsToMigrate = transactions.filter(t => !t.createdAt);
+      if (transactionsToMigrate.length > 0) {
+        console.log(`Found ${transactionsToMigrate.length} transactions to migrate.`);
+        const batch = writeBatch(firestore);
+        transactionsToMigrate.forEach(t => {
+          const docRef = doc(firestore, 'users', user.uid, 'transactions', t.id);
+          // The getTime() will be based on user's local timezone but consistent for backfill
+          const newTimestamp = new Date(`${t.date}T00:00:00`).getTime();
+          batch.update(docRef, { createdAt: newTimestamp });
+        });
+        batch.commit().then(() => {
+          console.log("Successfully migrated old transactions.");
+        }).catch(error => {
+          console.error("Error migrating transactions: ", error);
+        });
+      }
     }
   }, [transactions, firestore, user]);
 
@@ -138,83 +138,85 @@ export function TransactionsView() {
     addDocumentNonBlocking(transactionsRef, data);
 
     if (data.type === 'income') {
-        const accountRef = doc(firestore, 'users', user.uid, 'accounts', data.accountId);
-        updateDocumentNonBlocking(accountRef, { balance: increment(data.amount) });
+      const accountRef = doc(firestore, 'users', user.uid, 'accounts', data.accountId);
+      updateDocumentNonBlocking(accountRef, { balance: increment(data.amount) });
     } else if (data.type === 'expense') {
-        const accountRef = doc(firestore, 'users', user.uid, 'accounts', data.accountId);
-        updateDocumentNonBlocking(accountRef, { balance: increment(-data.amount) });
+      const accountRef = doc(firestore, 'users', user.uid, 'accounts', data.accountId);
+      updateDocumentNonBlocking(accountRef, { balance: increment(-data.amount) });
     } else if (data.type === 'transfer' && data.toAccountId) {
-        const fromAccountRef = doc(firestore, 'users', user.uid, 'accounts', data.accountId);
-        updateDocumentNonBlocking(fromAccountRef, { balance: increment(-data.amount) });
-        const toAccountRef = doc(firestore, 'users', user.uid, 'accounts', data.toAccountId);
-        updateDocumentNonBlocking(toAccountRef, { balance: increment(data.amount) });
+      const fromAccountRef = doc(firestore, 'users', user.uid, 'accounts', data.accountId);
+      updateDocumentNonBlocking(fromAccountRef, { balance: increment(-data.amount) });
+      const toAccountRef = doc(firestore, 'users', user.uid, 'accounts', data.toAccountId);
+      updateDocumentNonBlocking(toAccountRef, { balance: increment(data.amount) });
     }
   };
-  
+
   const updateTransaction = (id: string, oldTransaction: Transaction, newData: Omit<Transaction, 'id'>) => {
-      if (!firestore || !user) return;
-      const docRef = doc(firestore, 'users', user.uid, 'transactions', id);
-      updateDocumentNonBlocking(docRef, newData);
+    if (!firestore || !user) return;
+    const docRef = doc(firestore, 'users', user.uid, 'transactions', id);
+    updateDocumentNonBlocking(docRef, newData);
 
-      // Revert old transaction effect on balances
-      if (oldTransaction.type === 'income') {
-          const accountRef = doc(firestore, 'users', user.uid, 'accounts', oldTransaction.accountId);
-          updateDocumentNonBlocking(accountRef, { balance: increment(-oldTransaction.amount) });
-      } else if (oldTransaction.type === 'expense') {
-          const accountRef = doc(firestore, 'users', user.uid, 'accounts', oldTransaction.accountId);
-          updateDocumentNonBlocking(accountRef, { balance: increment(oldTransaction.amount) });
-      } else if (oldTransaction.type === 'transfer' && oldTransaction.toAccountId) {
-          const fromAccountRef = doc(firestore, 'users', user.uid, 'accounts', oldTransaction.accountId);
-          updateDocumentNonBlocking(fromAccountRef, { balance: increment(oldTransaction.amount) });
-          const toAccountRef = doc(firestore, 'users', user.uid, 'accounts', oldTransaction.toAccountId);
-          updateDocumentNonBlocking(toAccountRef, { balance: increment(-oldTransaction.amount) });
-      }
+    // Revert old transaction effect on balances
+    if (oldTransaction.type === 'income') {
+      const accountRef = doc(firestore, 'users', user.uid, 'accounts', oldTransaction.accountId);
+      updateDocumentNonBlocking(accountRef, { balance: increment(-oldTransaction.amount) });
+    } else if (oldTransaction.type === 'expense') {
+      const accountRef = doc(firestore, 'users', user.uid, 'accounts', oldTransaction.accountId);
+      updateDocumentNonBlocking(accountRef, { balance: increment(oldTransaction.amount) });
+    } else if (oldTransaction.type === 'transfer' && oldTransaction.toAccountId) {
+      const fromAccountRef = doc(firestore, 'users', user.uid, 'accounts', oldTransaction.accountId);
+      updateDocumentNonBlocking(fromAccountRef, { balance: increment(oldTransaction.amount) });
+      const toAccountRef = doc(firestore, 'users', user.uid, 'accounts', oldTransaction.toAccountId);
+      updateDocumentNonBlocking(toAccountRef, { balance: increment(-oldTransaction.amount) });
+    }
 
-      // Apply new transaction effect on balances
-      if (newData.type === 'income') {
-          const accountRef = doc(firestore, 'users', user.uid, 'accounts', newData.accountId);
-          updateDocumentNonBlocking(accountRef, { balance: increment(newData.amount) });
-      } else if (newData.type === 'expense') {
-          const accountRef = doc(firestore, 'users', user.uid, 'accounts', newData.accountId);
-          updateDocumentNonBlocking(accountRef, { balance: increment(-newData.amount) });
-      } else if (newData.type === 'transfer' && newData.toAccountId) {
-          const fromAccountRef = doc(firestore, 'users', user.uid, 'accounts', newData.accountId);
-          updateDocumentNonBlocking(fromAccountRef, { balance: increment(-newData.amount) });
-          const toAccountRef = doc(firestore, 'users', user.uid, 'accounts', newData.toAccountId);
-          updateDocumentNonBlocking(toAccountRef, { balance: increment(newData.amount) });
-      }
+    // Apply new transaction effect on balances
+    if (newData.type === 'income') {
+      const accountRef = doc(firestore, 'users', user.uid, 'accounts', newData.accountId);
+      updateDocumentNonBlocking(accountRef, { balance: increment(newData.amount) });
+    } else if (newData.type === 'expense') {
+      const accountRef = doc(firestore, 'users', user.uid, 'accounts', newData.accountId);
+      updateDocumentNonBlocking(accountRef, { balance: increment(-newData.amount) });
+    } else if (newData.type === 'transfer' && newData.toAccountId) {
+      const fromAccountRef = doc(firestore, 'users', user.uid, 'accounts', newData.accountId);
+      updateDocumentNonBlocking(fromAccountRef, { balance: increment(-newData.amount) });
+      const toAccountRef = doc(firestore, 'users', user.uid, 'accounts', newData.toAccountId);
+      updateDocumentNonBlocking(toAccountRef, { balance: increment(newData.amount) });
+    }
   };
-  
+
   const deleteTransaction = (transaction: Transaction) => {
     if (!firestore || !user || !accounts) return;
     const docRef = doc(firestore, 'users', user.uid, 'transactions', transaction.id);
     deleteDocumentNonBlocking(docRef);
 
     if (transaction.type === 'income') {
-        const accountRef = doc(firestore, 'users', user.uid, 'accounts', transaction.accountId);
-        updateDocumentNonBlocking(accountRef, { balance: increment(-transaction.amount) });
+      const accountRef = doc(firestore, 'users', user.uid, 'accounts', transaction.accountId);
+      updateDocumentNonBlocking(accountRef, { balance: increment(-transaction.amount) });
     } else if (transaction.type === 'expense') {
-        const accountRef = doc(firestore, 'users', user.uid, 'accounts', transaction.accountId);
-        updateDocumentNonBlocking(accountRef, { balance: increment(transaction.amount) });
+      const accountRef = doc(firestore, 'users', user.uid, 'accounts', transaction.accountId);
+      updateDocumentNonBlocking(accountRef, { balance: increment(transaction.amount) });
     } else if (transaction.type === 'transfer' && transaction.toAccountId) {
-        const fromAccountRef = doc(firestore, 'users', user.uid, 'accounts', transaction.accountId);
-        updateDocumentNonBlocking(fromAccountRef, { balance: increment(transaction.amount) });
-        const toAccountRef = doc(firestore, 'users', user.uid, 'accounts', transaction.toAccountId);
-        updateDocumentNonBlocking(toAccountRef, { balance: increment(-transaction.amount) });
+      const fromAccountRef = doc(firestore, 'users', user.uid, 'accounts', transaction.accountId);
+      updateDocumentNonBlocking(fromAccountRef, { balance: increment(transaction.amount) });
+      const toAccountRef = doc(firestore, 'users', user.uid, 'accounts', transaction.toAccountId);
+      updateDocumentNonBlocking(toAccountRef, { balance: increment(-transaction.amount) });
     }
   };
 
   const addCategory = (name: string, type: 'income' | 'expense') => {
     if (!categoriesRef) return;
     const promise = addDocumentNonBlocking(categoriesRef, { name, type });
-    promise.then(() => {
-        form.setValue('category', name);
+    promise.then((docRef) => {
+      if(docRef) {
+        form.setValue('category', docRef.id);
+      }
     });
   };
 
   const [isAddCategoryOpen, setIsAddCategoryOpen] = useState(false);
   const [newCategoryName, setNewCategoryName] = useState('');
-  const [newCategoryType, setNewCategoryType] = useState<'income'|'expense'>('expense');
+  const [newCategoryType, setNewCategoryType] = useState<'income' | 'expense'>('expense');
 
   const [filterMonth, setFilterMonth] = useState<string>("all");
   const [filterCategory, setFilterCategory] = useState<string>("all");
@@ -227,7 +229,7 @@ export function TransactionsView() {
       amount: 0,
       accountId: "",
       toAccountId: "",
-      category: "Other",
+      category: "",
       type: "expense",
       subType: "Need",
       date: new Date(),
@@ -261,6 +263,8 @@ export function TransactionsView() {
 
 
   const onSubmit = (values: TransactionFormValues) => {
+    const categoryName = categories?.find(c => c.id === values.category)?.name;
+
     const transactionData: Omit<Transaction, 'id'> = {
       description: values.description,
       amount: values.amount,
@@ -269,70 +273,74 @@ export function TransactionsView() {
       accountId: values.accountId,
       createdAt: editingTransaction?.createdAt ?? Date.now(), // Preserve original createdAt or set new
       ...(values.toAccountId && { toAccountId: values.toAccountId }),
-      ...(values.category && { category: values.category }),
+      ...(categoryName && { category: categoryName }),
       ...(values.type === 'expense' && { subType: values.subType as ExpenseSubType }),
     };
 
     if (editingTransaction) {
-        updateTransaction(editingTransaction.id, editingTransaction, transactionData);
+      updateTransaction(editingTransaction.id, editingTransaction, transactionData);
     } else {
-        addTransaction(transactionData);
+      addTransaction(transactionData);
     }
-    
+
     form.reset();
     setEditingTransaction(null);
     setIsFormOpen(false);
   };
-  
+
   const openNewTransactionDialog = () => {
     setEditingTransaction(null);
     const cashInHandAccount = accounts?.find(a => a.name === 'Cash in Hand');
     const savingsAccount = accounts?.find(a => a.name === 'Savings Account');
-    
+    const defaultExpenseCategory = categories?.find(c => c.type === 'expense' && c.name === 'Other');
+
+
     form.reset({
       description: "",
       amount: 0,
-      category: "Other",
+      category: defaultExpenseCategory?.id || "",
       type: "expense",
       subType: "Need",
       date: new Date(),
       accountId: cashInHandAccount?.id ?? (accounts && accounts.length > 0 ? accounts[0].id : ""),
       toAccountId: savingsAccount?.id ?? "",
     });
-    
+
     // Set defaults based on type
     const newType = form.getValues('type');
     if (newType === 'transfer') {
-        form.setValue('accountId', cashInHandAccount?.id ?? '');
-        form.setValue('toAccountId', savingsAccount?.id ?? '');
+      form.setValue('accountId', cashInHandAccount?.id ?? '');
+      form.setValue('toAccountId', savingsAccount?.id ?? '');
     } else {
-        form.setValue('accountId', cashInHandAccount?.id ?? (accounts?.[0]?.id || ''));
+      form.setValue('accountId', cashInHandAccount?.id ?? (accounts?.[0]?.id || ''));
     }
 
     setIsFormOpen(true);
   };
 
   const handleEdit = useCallback((transaction: Transaction) => {
-      setEditingTransaction(transaction);
-      form.reset({
-          description: transaction.description,
-          amount: transaction.amount,
-          type: transaction.type,
-          date: parseISO(transaction.date),
-          accountId: transaction.accountId,
-          toAccountId: transaction.toAccountId,
-          category: transaction.category,
-          subType: transaction.subType,
-      });
-      setIsFormOpen(true);
-  }, [form]);
-  
+    setEditingTransaction(transaction);
+    const categoryId = categories?.find(c => c.name === transaction.category && c.type === transaction.type)?.id || "";
+
+    form.reset({
+      description: transaction.description,
+      amount: transaction.amount,
+      type: transaction.type,
+      date: parseISO(transaction.date),
+      accountId: transaction.accountId,
+      toAccountId: transaction.toAccountId,
+      category: categoryId,
+      subType: transaction.subType,
+    });
+    setIsFormOpen(true);
+  }, [form, categories]);
+
   const handleAddCategory = () => {
     const trimmedName = newCategoryName.trim();
-    if(trimmedName) {
-        addCategory(trimmedName, newCategoryType);
-        setNewCategoryName('');
-        setIsAddCategoryOpen(false);
+    if (trimmedName) {
+      addCategory(trimmedName, newCategoryType);
+      setNewCategoryName('');
+      setIsAddCategoryOpen(false);
     }
   };
 
@@ -345,7 +353,7 @@ export function TransactionsView() {
     });
     return Array.from(months).sort().reverse();
   }, [transactions]);
-  
+
   const formatAmount = (value: number) => {
     return new Intl.NumberFormat("en-PK", {
       style: "currency",
@@ -354,32 +362,34 @@ export function TransactionsView() {
       maximumFractionDigits: 0,
     }).format(value);
   }
-  
+
   const availableCategories = useMemo(() => {
     if (!categories) return [];
     if (filterType === 'all' || filterType === 'transfer') return categories;
     return categories.filter(c => c.type === filterType);
   }, [categories, filterType]);
-  
+
   // Reset category filter if it becomes invalid
   useEffect(() => {
-    if (filterCategory !== 'all' && !availableCategories.find(c => c.name === filterCategory)) {
-        setFilterCategory('all');
+    if (filterCategory !== 'all' && !availableCategories.find(c => c.id === filterCategory)) {
+      setFilterCategory('all');
     }
   }, [availableCategories, filterCategory]);
 
   const filteredTransactions = useMemo(() => {
     if (!transactions) return [];
+    const categoryName = categories?.find(c => c.id === filterCategory)?.name;
+
     return transactions
       .filter(t => filterMonth === 'all' || format(parseISO(t.date), 'yyyy-MM') === filterMonth)
       .filter(t => filterType === 'all' || t.type === filterType)
-      .filter(t => filterCategory === 'all' || t.type === 'transfer' || t.category === filterCategory)
-      .sort((a,b) => {
-          const dateA = a.createdAt || new Date(`${a.date}T00:00:00`).getTime();
-          const dateB = b.createdAt || new Date(`${b.date}T00:00:00`).getTime();
-          return dateB - dateA;
+      .filter(t => filterCategory === 'all' || t.type === 'transfer' || t.category === categoryName)
+      .sort((a, b) => {
+        const dateA = a.createdAt || new Date(`${a.date}T00:00:00`).getTime();
+        const dateB = b.createdAt || new Date(`${b.date}T00:00:00`).getTime();
+        return dateB - dateA;
       });
-  }, [transactions, filterMonth, filterCategory, filterType]);
+  }, [transactions, filterMonth, filterCategory, filterType, categories]);
 
   const filteredTotal = useMemo(() => {
     return filteredTransactions.reduce((total, t) => {
@@ -392,7 +402,7 @@ export function TransactionsView() {
   const filteredCategoriesForForm = useMemo(() => {
     if (!categories) return [];
     if (transactionType === 'income') {
-        return categories.filter(c => c.type === 'income');
+      return categories.filter(c => c.type === 'income');
     }
     return categories.filter(c => c.type === 'expense');
   }, [categories, transactionType]);
@@ -402,26 +412,25 @@ export function TransactionsView() {
   }
 
   const renderTransactionDetails = (transaction: Transaction) => {
-      if (transaction.type === 'transfer') {
-          return `${getAccountName(transaction.accountId)} → ${getAccountName(transaction.toAccountId!)}`;
-      }
-      return `${getAccountName(transaction.accountId)} / ${transaction.category}`;
+    if (transaction.type === 'transfer') {
+      return `${getAccountName(transaction.accountId)} → ${getAccountName(transaction.toAccountId!)}`;
+    }
+    return `${getAccountName(transaction.accountId)} / ${transaction.category}`;
   }
 
   return (
-    <div className="space-y-6">
-       <Card>
-          <CardHeader>
-            <CardTitle>Filter Transactions</CardTitle>
-            <CardDescription>Drill down into your financial activity.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {isLoadingTransactions || isLoadingCategories ? <Skeleton className="h-10 w-full" /> : (
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <div className="space-y-4">
+      <Card>
+        <CardHeader className="p-3">
+          <CardTitle className="text-base">Sort Transactions</CardTitle>
+        </CardHeader>
+        <CardContent className="p-3 pt-0">
+          {isLoadingTransactions || isLoadingCategories ? <Skeleton className="h-10 w-full" /> : (
+            <div className="grid grid-cols-3 sm:grid-cols-3 gap-2">
               <div>
-                <Label htmlFor="filter-month">Month</Label>
+                <Label htmlFor="filter-month" className="text-xs">Month</Label>
                 <Select value={filterMonth} onValueChange={setFilterMonth}>
-                  <SelectTrigger id="filter-month"><SelectValue/></SelectTrigger>
+                  <SelectTrigger id="filter-month" className="h-8"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Months</SelectItem>
                     {availableMonths.map(month => (
@@ -431,9 +440,9 @@ export function TransactionsView() {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="filter-type">Type</Label>
+                <Label htmlFor="filter-type" className="text-xs">Type</Label>
                 <Select value={filterType} onValueChange={setFilterType}>
-                  <SelectTrigger id="filter-type"><SelectValue/></SelectTrigger>
+                  <SelectTrigger id="filter-type" className="h-8"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Types</SelectItem>
                     <SelectItem value="income">Income</SelectItem>
@@ -442,92 +451,72 @@ export function TransactionsView() {
                   </SelectContent>
                 </Select>
               </div>
-               <div>
-                <Label htmlFor="filter-category">Category</Label>
+              <div>
+                <Label htmlFor="filter-category" className="text-xs">Category</Label>
                 <Select value={filterCategory} onValueChange={setFilterCategory} disabled={filterType === 'transfer'}>
-                  <SelectTrigger id="filter-category"><SelectValue/></SelectTrigger>
+                  <SelectTrigger id="filter-category" className="h-8"><SelectValue /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Categories</SelectItem>
                     {availableCategories.map(cat => (
-                      <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>
+                      <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
             </div>
-            )}
-          </CardContent>
-       </Card>
+          )}
+        </CardContent>
+      </Card>
 
-      <div className="flex items-center justify-end">
-        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-          <DialogTrigger asChild>
-            <Button onClick={openNewTransactionDialog} disabled={!accounts || accounts.length === 0}>
-              <Plus className="mr-2 h-4 w-4" /> Add Transaction
-            </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>{editingTransaction ? "Edit Transaction" : "Add New Transaction"}</DialogTitle>
-            </DialogHeader>
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                <FormField
-                  control={form.control}
-                  name="type"
-                  render={({ field }) => (
-                    <FormItem className="space-y-3">
-                      <FormLabel>Type</FormLabel>
-                      <FormControl>
-                        <RadioGroup
-                          onValueChange={(value) => {
-                            field.onChange(value);
-                            form.setValue('category', 'Other');
-                          }}
-                          defaultValue={field.value}
-                          className="grid grid-cols-3 gap-2"
-                        >
-                          <Label htmlFor="income" className="flex items-center gap-2 rounded-md border p-2 cursor-pointer has-[:checked]:border-primary">
-                            <RadioGroupItem value="income" id="income" />
-                            <PlusCircle className="h-4 w-4" /> Credit
-                          </Label>
-                          <Label htmlFor="expense" className="flex items-center gap-2 rounded-md border p-2 cursor-pointer has-[:checked]:border-primary">
-                            <RadioGroupItem value="expense" id="expense" />
-                            <MinusCircle className="h-4 w-4" /> Debit
-                          </Label>
-                          <Label htmlFor="transfer" className="flex items-center gap-2 rounded-md border p-2 cursor-pointer has-[:checked]:border-primary">
-                            <RadioGroupItem value="transfer" id="transfer" />
-                            <ArrowRightLeft className="h-4 w-4" /> Transfer
-                          </Label>
-                        </RadioGroup>
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                 <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Description</FormLabel>
-                      <FormControl>
-                        <Input placeholder="e.g., Lunch with colleagues" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="grid grid-cols-2 gap-4">
-                   <FormField
+      <Card>
+        <CardHeader className="p-3 flex flex-row items-start justify-between">
+          <div>
+            <CardTitle>Transactions</CardTitle>
+            <CardDescription>
+              Net flow for selection: <span className={cn("font-medium", filteredTotal >= 0 ? "text-primary" : "text-destructive")}>{formatAmount(filteredTotal)}</span>
+            </CardDescription>
+          </div>
+           <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+            <DialogTrigger asChild>
+              <Button onClick={openNewTransactionDialog} disabled={!accounts || accounts.length === 0} size="sm">
+                Add Transaction
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>{editingTransaction ? "Edit Transaction" : "Add New Transaction"}</DialogTitle>
+              </DialogHeader>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+                  <FormField
                     control={form.control}
-                    name="amount"
+                    name="type"
                     render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Amount</FormLabel>
+                      <FormItem className="space-y-3">
+                        <FormLabel>Type</FormLabel>
                         <FormControl>
-                          <Input type="number" placeholder="0" {...field} />
+                          <RadioGroup
+                            onValueChange={(value) => {
+                              field.onChange(value);
+                              const defaultCategory = categories?.find(c => c.type === value)?.id || "";
+                              form.setValue('category', defaultCategory);
+                            }}
+                            defaultValue={field.value}
+                            className="grid grid-cols-3 gap-2"
+                          >
+                            <Label htmlFor="income" className="flex items-center gap-2 rounded-md border p-2 cursor-pointer has-[:checked]:border-primary">
+                              <RadioGroupItem value="income" id="income" />
+                              <PlusCircle className="h-4 w-4" /> Credit
+                            </Label>
+                            <Label htmlFor="expense" className="flex items-center gap-2 rounded-md border p-2 cursor-pointer has-[:checked]:border-primary">
+                              <RadioGroupItem value="expense" id="expense" />
+                              <MinusCircle className="h-4 w-4" /> Debit
+                            </Label>
+                            <Label htmlFor="transfer" className="flex items-center gap-2 rounded-md border p-2 cursor-pointer has-[:checked]:border-primary">
+                              <RadioGroupItem value="transfer" id="transfer" />
+                              <ArrowRightLeft className="h-4 w-4" /> Transfer
+                            </Label>
+                          </RadioGroup>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -535,174 +524,188 @@ export function TransactionsView() {
                   />
                   <FormField
                     control={form.control}
-                    name="date"
+                    name="description"
                     render={({ field }) => (
-                      <FormItem className="flex flex-col">
-                        <FormLabel>Date</FormLabel>
-                        <Popover>
-                          <PopoverTrigger asChild>
-                            <FormControl>
-                              <Button
-                                variant={"outline"}
-                                className={cn(
-                                  "w-full pl-3 text-left font-normal",
-                                  !field.value && "text-muted-foreground"
-                                )}
-                              >
-                                {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
-                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                              </Button>
-                            </FormControl>
-                          </PopoverTrigger>
-                          <PopoverContent className="w-auto p-0" align="start">
-                            <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
-                          </PopoverContent>
-                        </Popover>
+                      <FormItem>
+                        <FormLabel>Description</FormLabel>
+                        <FormControl>
+                          <Input placeholder="e.g., Lunch with colleagues" {...field} />
+                        </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                </div>
-                 
-                {transactionType === 'transfer' ? (
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <FormField
+                      control={form.control}
+                      name="amount"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Amount</FormLabel>
+                          <FormControl>
+                            <Input type="number" placeholder="0" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="date"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-col">
+                          <FormLabel>Date</FormLabel>
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <FormControl>
+                                <Button
+                                  variant={"outline"}
+                                  className={cn(
+                                    "w-full pl-3 text-left font-normal",
+                                    !field.value && "text-muted-foreground"
+                                  )}
+                                >
+                                  {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
+                                  <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                                </Button>
+                              </FormControl>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar mode="single" selected={field.value} onSelect={field.onChange} initialFocus />
+                            </PopoverContent>
+                          </Popover>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+
+                  {transactionType === 'transfer' ? (
                     <div className="grid grid-cols-2 gap-4">
-                        <FormField
-                            control={form.control}
-                            name="accountId"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>From</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value}>
-                                    <FormControl><SelectTrigger><SelectValue placeholder="From Account" /></SelectTrigger></FormControl>
-                                    <SelectContent>
-                                        {accounts?.map(acc => <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <FormField
-                            control={form.control}
-                            name="toAccountId"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>To</FormLabel>
-                                <Select onValueChange={field.onChange} value={field.value}>
-                                    <FormControl><SelectTrigger><SelectValue placeholder="To Account" /></SelectTrigger></FormControl>
-                                    <SelectContent>
-                                        {accounts?.map(acc => <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>)}
-                                    </SelectContent>
-                                </Select>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                        />
+                      <FormField
+                        control={form.control}
+                        name="accountId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>From</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl><SelectTrigger><SelectValue placeholder="From Account" /></SelectTrigger></FormControl>
+                              <SelectContent>
+                                {accounts?.map(acc => <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={form.control}
+                        name="toAccountId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>To</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl><SelectTrigger><SelectValue placeholder="To Account" /></SelectTrigger></FormControl>
+                              <SelectContent>
+                                {accounts?.map(acc => <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </div>
-                ) : (
+                  ) : (
                     <>
+                      <FormField
+                        control={form.control}
+                        name="accountId"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Account</FormLabel>
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <FormControl><SelectTrigger><SelectValue placeholder="Select an account" /></SelectTrigger></FormControl>
+                              <SelectContent>
+                                {accounts?.map(acc => <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>)}
+                              </SelectContent>
+                            </Select>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <div className={cn("grid gap-4", transactionType === 'expense' ? 'grid-cols-2' : 'grid-cols-1')}>
                         <FormField
-                            control={form.control}
-                            name="accountId"
-                            render={({ field }) => (
-                                <FormItem>
-                                <FormLabel>Account</FormLabel>
+                          control={form.control}
+                          name="category"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Category</FormLabel>
+                              <div className="flex items-center gap-2">
                                 <Select onValueChange={field.onChange} value={field.value}>
-                                    <FormControl><SelectTrigger><SelectValue placeholder="Select an account" /></SelectTrigger></FormControl>
-                                    <SelectContent>
-                                        {accounts?.map(acc => <SelectItem key={acc.id} value={acc.id}>{acc.name}</SelectItem>)}
-                                    </SelectContent>
+                                  <FormControl><SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger></FormControl>
+                                  <SelectContent>
+                                    {filteredCategoriesForForm?.map(cat => <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>)}
+                                  </SelectContent>
                                 </Select>
-                                <FormMessage />
-                                </FormItem>
-                            )}
-                        />
-                        <div className={cn("grid gap-4", transactionType === 'expense' ? 'grid-cols-2' : 'grid-cols-1')}>
-                            <FormField
-                                control={form.control}
-                                name="category"
-                                render={({ field }) => (
-                                <FormItem>
-                                    <FormLabel>Category</FormLabel>
-                                    <div className="flex items-center gap-2">
-                                    <Select onValueChange={field.onChange} value={field.value}>
-                                        <FormControl><SelectTrigger><SelectValue placeholder="Select a category" /></SelectTrigger></FormControl>
-                                        <SelectContent>
-                                            {filteredCategoriesForForm?.map(cat => <SelectItem key={cat.id} value={cat.name}>{cat.name}</SelectItem>)}
-                                        </SelectContent>
-                                    </Select>
-                                    <Dialog open={isAddCategoryOpen} onOpenChange={setIsAddCategoryOpen}>
-                                        <DialogTrigger asChild>
-                                            <Button variant="outline" size="icon"><Plus className="h-4 w-4" /></Button>
-                                        </DialogTrigger>
-                                        <DialogContent className="sm:max-w-[425px]">
-                                            <DialogHeader><DialogTitle>Add New Category</DialogTitle></DialogHeader>
-                                            <div className="grid gap-4 py-2">
-                                                <Input placeholder="Category name" value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} />
-                                                <RadioGroup onValueChange={(value) => setNewCategoryType(value as 'income' | 'expense')} defaultValue={newCategoryType} className="grid grid-cols-2 gap-4">
-                                                    <Label htmlFor="cat_expense" className="flex items-center gap-2 rounded-md border p-2 cursor-pointer has-[:checked]:border-primary">
-                                                        <RadioGroupItem value="expense" id="cat_expense" /> Expense
-                                                    </Label>
-                                                    <Label htmlFor="cat_income" className="flex items-center gap-2 rounded-md border p-2 cursor-pointer has-[:checked]:border-primary">
-                                                        <RadioGroupItem value="income" id="cat_income" /> Income
-                                                    </Label>
-                                                </RadioGroup>
-                                            </div>
-                                            <DialogFooter>
-                                                <DialogClose asChild><Button type="button" variant="secondary">Cancel</Button></DialogClose>
-                                                <Button type="button" onClick={handleAddCategory}>Add Category</Button>
-                                            </DialogFooter>
-                                        </DialogContent>
-                                    </Dialog>
+                                <Dialog open={isAddCategoryOpen} onOpenChange={setIsAddCategoryOpen}>
+                                  <DialogTrigger asChild>
+                                    <Button variant="outline" size="icon"><Plus className="h-4 w-4" /></Button>
+                                  </DialogTrigger>
+                                  <DialogContent className="sm:max-w-[425px]">
+                                    <DialogHeader><DialogTitle>Add New Category</DialogTitle></DialogHeader>
+                                    <div className="grid gap-4 py-2">
+                                      <Input placeholder="Category name" value={newCategoryName} onChange={(e) => setNewCategoryName(e.target.value)} />
+                                      <RadioGroup onValueChange={(value) => setNewCategoryType(value as 'income' | 'expense')} defaultValue={newCategoryType} className="grid grid-cols-2 gap-4">
+                                        <Label htmlFor="cat_expense" className="flex items-center gap-2 rounded-md border p-2 cursor-pointer has-[:checked]:border-primary">
+                                          <RadioGroupItem value="expense" id="cat_expense" /> Expense
+                                        </Label>
+                                        <Label htmlFor="cat_income" className="flex items-center gap-2 rounded-md border p-2 cursor-pointer has-[:checked]:border-primary">
+                                          <RadioGroupItem value="income" id="cat_income" /> Income
+                                        </Label>
+                                      </RadioGroup>
                                     </div>
-                                    <FormMessage />
-                                </FormItem>
-                                )}
-                            />
-                            {transactionType === 'expense' && (
-                                <FormField
-                                control={form.control}
-                                name="subType"
-                                render={({ field }) => (
-                                    <FormItem>
-                                    <FormLabel>Expense Type</FormLabel>
-                                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                        <FormControl><SelectTrigger><SelectValue placeholder="Select a type" /></SelectTrigger></FormControl>
-                                        <SelectContent>
-                                        <SelectItem value="Need">Need</SelectItem>
-                                        <SelectItem value="Want">Want</SelectItem>
-                                        </SelectContent>
-                                    </Select>
-                                    </FormItem>
-                                )}
-                                />
+                                    <DialogFooter>
+                                      <DialogClose asChild><Button type="button" variant="secondary">Cancel</Button></DialogClose>
+                                      <Button type="button" onClick={handleAddCategory}>Add Category</Button>
+                                    </DialogFooter>
+                                  </DialogContent>
+                                </Dialog>
+                              </div>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        {transactionType === 'expense' && (
+                          <FormField
+                            control={form.control}
+                            name="subType"
+                            render={({ field }) => (
+                              <FormItem>
+                                <FormLabel>Expense Type</FormLabel>
+                                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                  <FormControl><SelectTrigger><SelectValue placeholder="Select a type" /></SelectTrigger></FormControl>
+                                  <SelectContent>
+                                    <SelectItem value="Need">Need</SelectItem>
+                                    <SelectItem value="Want">Want</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </FormItem>
                             )}
-                        </div>
+                          />
+                        )}
+                      </div>
                     </>
-                )}
-                
-                <DialogFooter className="grid grid-cols-2 gap-2 pt-2">
+                  )}
+
+                  <DialogFooter className="grid grid-cols-2 gap-2 pt-2">
                     <DialogClose asChild><Button type="button" variant="outline">Cancel</Button></DialogClose>
                     <Button type="submit">{editingTransaction ? "Save Changes" : "Add Transaction"}</Button>
-                </DialogFooter>
-              </form>
-            </Form>
-          </DialogContent>
-        </Dialog>
-      </div>
-
-      <Card>
-        <CardHeader>
-            <div className="flex justify-between items-center">
-                <div>
-                    <CardTitle>Filtered Transactions</CardTitle>
-                    <CardDescription>A list of transactions based on your filters.</CardDescription>
-                </div>
-                <div className="text-right">
-                    <p className="text-sm text-muted-foreground">Net Flow</p>
-                    <p className={cn("text-xl font-bold", filteredTotal >= 0 ? "text-primary" : "text-destructive")}>{formatAmount(filteredTotal)}</p>
-                </div>
-            </div>
+                  </DialogFooter>
+                </form>
+              </Form>
+            </DialogContent>
+          </Dialog>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
@@ -729,7 +732,7 @@ export function TransactionsView() {
                       <div className="text-sm text-muted-foreground">{format(toZonedTime(new Date(`${transaction.date}T00:00:00`), Intl.DateTimeFormat().resolvedOptions().timeZone), 'M/d/yy')}</div>
                     </TableCell>
                     <TableCell className="p-2">{renderTransactionDetails(transaction)}</TableCell>
-                    <TableCell className={cn("text-right font-medium p-2", transaction.type === 'income' ? 'text-primary' : transaction.type === 'expense' ? 'text-destructive' : 'text-muted-foreground' )}>
+                    <TableCell className={cn("text-right font-medium p-2", transaction.type === 'income' ? 'text-primary' : transaction.type === 'expense' ? 'text-destructive' : 'text-muted-foreground')}>
                       {transaction.type === 'income' ? '+' : transaction.type === 'expense' ? '-' : ''}
                       {formatAmount(transaction.amount)}
                     </TableCell>
@@ -760,7 +763,4 @@ export function TransactionsView() {
 
     
 
-
-
     
-

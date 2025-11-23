@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useMemo, useEffect } from 'react';
@@ -13,7 +12,11 @@ import type { Task, Habit, Transaction, Account } from '@/lib/types';
 import { Download, Loader2 } from 'lucide-react';
 import { Skeleton } from '../ui/skeleton';
 
-export function DataExporter() {
+interface DataExporterProps {
+  compact?: boolean;
+}
+
+export function DataExporter({ compact = false }: DataExporterProps) {
   const { user } = useUser();
   const firestore = useFirestore();
 
@@ -299,7 +302,13 @@ a.href = url;
   };
 
   if (isLoading) {
-    return (
+    return compact ? (
+      <div className="space-y-3">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="h-9 w-full" />
+        <Skeleton className="h-9 w-full" />
+      </div>
+    ) : (
       <Card>
         <CardHeader>
           <Skeleton className="h-6 w-1/2" />
@@ -310,6 +319,41 @@ a.href = url;
           <Skeleton className="h-10 w-48" />
         </CardContent>
       </Card>
+    );
+  }
+
+  if (compact) {
+    return (
+      <div className="space-y-3">
+        <div className="space-y-2">
+          <label htmlFor="month-select" className="text-sm font-medium">Select Month</label>
+          <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+            <SelectTrigger id="month-select" disabled={availableMonths.length === 0} className="h-9">
+              <SelectValue placeholder="Select a month" />
+            </SelectTrigger>
+            <SelectContent>
+              {availableMonths.map(month => (
+                <SelectItem key={month} value={month}>
+                  {format(parseISO(`${month}-01T00:00:00`), 'MMMM yyyy')}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <Button
+          onClick={handleExport}
+          disabled={isExporting || !selectedMonth}
+          size="sm"
+          className="w-full"
+        >
+          {isExporting ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Download className="mr-2 h-4 w-4" />
+          )}
+          Export to Excel
+        </Button>
+      </div>
     );
   }
 

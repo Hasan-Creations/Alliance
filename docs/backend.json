@@ -225,6 +225,22 @@
           }
         }
       }
+    },
+    "FCMToken": {
+      "title": "FCM Token",
+      "description": "Represents a Firebase Cloud Messaging (FCM) device token for a user.",
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string",
+          "description": "The FCM device token."
+        },
+        "createdAt": {
+          "type": "number",
+          "description": "The timestamp (in milliseconds) when the token was created."
+        }
+      },
+      "required": ["token", "createdAt"]
     }
   },
   "auth": {
@@ -274,6 +290,12 @@
         "$ref": "#/entities/UserSettings/properties/startup"
       },
       "description": "Stores startup preferences for a specific user."
+    },
+    "/users/{userId}/fcmTokens/{tokenId}": {
+      "schema": {
+        "$ref": "#/entities/FCMToken"
+      },
+      "description": "Stores FCM device tokens for a specific user."
     }
   }
 }

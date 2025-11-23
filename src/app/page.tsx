@@ -6,7 +6,6 @@ import { useSidebar } from "@/components/ui/sidebar";
 import { MainNav } from "@/components/main-nav";
 import { BottomNav } from "@/components/bottom-nav";
 import { useUser } from "@/firebase";
-import { Loader2 } from "lucide-react";
 import { DashboardView } from '@/components/dashboard/dashboard-view';
 import { TodoView } from '@/components/todos/todo-view';
 import { HabitsView } from '@/components/habits/habits-view';
@@ -14,6 +13,7 @@ import { FinanceView } from '@/components/finance/finance-view';
 import { SettingsView } from '@/components/settings/settings-view';
 import WelcomePage from "./welcome/page";
 import { AppViewContext } from "@/context/app-view-context";
+import { AllianceSpinner } from "@/components/ui/alliance-spinner";
 
 export default function AppPage() {
   const { user, isUserLoading } = useUser();
@@ -24,7 +24,7 @@ export default function AppPage() {
     return (
       <div className="flex min-h-screen w-full items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <AllianceSpinner />
           <p className="text-muted-foreground">Loading...</p>
         </div>
       </div>

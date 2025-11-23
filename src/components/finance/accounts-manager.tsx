@@ -101,7 +101,7 @@ export function AccountsManager() {
 
   return (
     <Card>
-      <CardHeader className="flex flex-row items-center justify-between">
+      <CardHeader className="p-3 flex flex-row items-center justify-between">
         <div>
           <CardTitle>Cash Accounts</CardTitle>
           <CardDescription>
@@ -159,7 +159,7 @@ export function AccountsManager() {
           </DialogContent>
         </Dialog>
       </CardHeader>
-      <CardContent>
+      <CardContent className="p-3">
         {isLoadingAccounts ? (
           <div className="space-y-2">
             <Skeleton className="h-8 w-full" />
@@ -170,14 +170,14 @@ export function AccountsManager() {
             No accounts found. Add one to get started.
           </p>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 gap-4">
             {accounts.map(account => (
               <div
                 key={account.id}
-                className="p-4 border rounded-lg flex justify-between items-center"
+                className="p-3 border rounded-lg flex justify-between items-center"
               >
-                <span className="font-medium">{account.name}</span>
-                <span className="font-semibold">
+                <span className="font-semibold">{account.name}</span>
+                <span className="font-base">
                   {formatCurrency(account.balance)}
                 </span>
               </div>
@@ -188,7 +188,3 @@ export function AccountsManager() {
     </Card>
   );
 }
-
-    
-
-    

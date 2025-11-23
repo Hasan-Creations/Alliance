@@ -7,6 +7,8 @@ import { cn } from '@/lib/utils';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { AppViewContextProvider } from '@/context/app-view-context';
 import { FirebaseMessagingListener } from '@/components/FirebaseMessagingListener';
+import { NotificationPrompter } from '@/components/NotificationPrompter';
+import { ThemeProvider } from '@/components/theme-provider';
 
 export const metadata: Metadata = {
   title: 'Alliance',
@@ -15,7 +17,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: '#50207A',
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#D6B9FC' },
+    { media: '(prefers-color-scheme: dark)', color: '#1A141F' },
+  ],
 };
 
 export default function RootLayout({
@@ -32,15 +37,23 @@ export default function RootLayout({
         <link rel="icon" href="/favicon.png" />
       </head>
       <body className={cn("font-body antialiased", "overflow-x-hidden")}>
-        <FirebaseClientProvider>
-          <FirebaseMessagingListener />
-          <SidebarProvider>
-            <AppViewContextProvider>
-              {children}
-            </AppViewContextProvider>
-          </SidebarProvider>
-        </FirebaseClientProvider>
-        <Toaster />
+         <ThemeProvider
+          attribute="class"
+          defaultTheme="dark"
+          enableSystem
+          disableTransitionOnChange
+        >
+          <FirebaseClientProvider>
+            <FirebaseMessagingListener />
+            <NotificationPrompter />
+            <SidebarProvider>
+              <AppViewContextProvider>
+                {children}
+              </AppViewContextProvider>
+            </SidebarProvider>
+          </FirebaseClientProvider>
+          <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );

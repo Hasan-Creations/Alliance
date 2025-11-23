@@ -19,8 +19,9 @@ import { initiateEmailSignIn, initiateEmailSignUp } from '@/firebase/non-blockin
 import { useToast } from '@/hooks/use-toast';
 import { AppLogo } from '@/components/app-logo';
 import { useRouter } from 'next/navigation';
-import { Loader2, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
+import { AllianceSpinner } from '@/components/ui/alliance-spinner';
 
 export default function LoginPage() {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -81,7 +82,7 @@ export default function LoginPage() {
      return (
        <div className="flex min-h-screen w-full items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <AllianceSpinner />
           <p className="text-muted-foreground">Redirecting...</p>
         </div>
       </div>

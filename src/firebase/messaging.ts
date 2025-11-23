@@ -1,40 +1,34 @@
 'use client';
 
 import { getApp } from 'firebase/app';
-import { getMessaging, getToken, onMessage } from 'firebase/messaging';
+import { getMessaging, getToken, onMessage, deleteToken as deleteFCMToken } from 'firebase/messaging';
 import { toast } from '@/hooks/use-toast';
 
 // This function is designed to be called ONCE
-export const requestPermissionAndGetToken = async () => {
+export const requestPermissionAndGetToken = async (silent = false) => {
   try {
-    // Ensure Firebase is initialized
     const app = getApp();
     const messaging = getMessaging(app);
 
-    // --- Request Permission ---
-    // This will pop up the browser's permission request dialog
-    const permission = await Notification.requestPermission();
-
-    if (permission === 'granted') {
-      console.log('Notification permission granted.');
-      
-      // --- Get Device Token ---
-      // Use the VAPID key from your Firebase project settings
-      const currentToken = await getToken(messaging, {
-        vapidKey: 'BDS7iOqM2a6A3rCq5PqjVdJkXbHlJ0w8aQ9fRzK2cZ1xYtJvVbN9hG4sK3oF7eI6uW8iJ0mP4sX2w',
-      });
-
-      if (currentToken) {
-        console.log('FCM Token:', currentToken);
-        // You would typically send this token to your server to store it
-        // and use it to send notifications to this specific device.
-        return currentToken;
-      } else {
-        console.log('No registration token available. Request permission to generate one.');
+    if (!silent) {
+      const permission = await Notification.requestPermission();
+      if (permission !== 'granted') {
+        console.log('Unable to get permission to notify.');
         return null;
       }
+    } else if (Notification.permission !== 'granted') {
+        return null; // Don't prompt if silent and permission not granted
+    }
+
+    // By removing the vapidKey, the SDK will automatically use the correct
+    // key from the project's configuration. This is the most reliable method.
+    const currentToken = await getToken(messaging);
+
+    if (currentToken) {
+      console.log('FCM Token:', currentToken);
+      return currentToken;
     } else {
-      console.log('Unable to get permission to notify.');
+      console.log('No registration token available. Request permission to generate one.');
       return null;
     }
   } catch (err) {
@@ -43,12 +37,21 @@ export const requestPermissionAndGetToken = async () => {
   }
 };
 
+export const deleteToken = async () => {
+    try {
+        const app = getApp();
+        const messaging = getMessaging(app);
+        await deleteFCMToken(messaging);
+    } catch(err) {
+        console.error('Error deleting FCM token: ', err);
+    }
+}
+
 // Function to set up the foreground message listener
 export const onForegroundMessage = () => {
   const messaging = getMessaging(getApp());
   const unsubscribe = onMessage(messaging, (payload) => {
     console.log('Foreground message received. ', payload);
-    // Display the notification as a toast
     toast({
         title: payload.notification?.title || "New Notification",
         description: payload.notification?.body || "",

@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useContext } from "react";
@@ -29,9 +28,10 @@ export function BottomNav() {
               className={cn(
                 "flex flex-col items-center justify-center gap-1 text-sm font-medium transition-colors",
                 isActive
-                  ? "text-primary"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted"
               )}
+              
             >
               <item.icon className="h-5 w-5" />
               <span>{item.label}</span>

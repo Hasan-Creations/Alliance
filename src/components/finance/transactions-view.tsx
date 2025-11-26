@@ -53,7 +53,7 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
-import { format, parseISO } from "date-fns";
+import { format } from "date-fns";
 import { CalendarIcon, Plus, Trash2, PlusCircle, MinusCircle, ArrowRightLeft, Pencil } from "lucide-react";
 import type { Account, Transaction, TransactionCategory, ExpenseSubType } from "@/lib/types";
 import { cn } from "@/lib/utils";
@@ -101,7 +101,7 @@ export function TransactionsView() {
     if (!firestore || !user) return null;
     return collection(firestore, 'users', user.uid, 'transactions');
   }, [firestore, user]);
-  
+
   const { data: rawTransactions, isLoading: isLoadingTransactions } = useCollection<Omit<Transaction, 'date'> & { date: any }>(transactionsRef);
 
   const transactions = useMemo(() => {
@@ -110,7 +110,7 @@ export function TransactionsView() {
       ...t,
       // The `date` can be a Firestore Timestamp, so we convert it to a JS Date object.
       // Firestore Timestamps have a `toDate()` method.
-      date: t.date?.toDate ? t.date.toDate() : parseISO(t.date as string),
+      date: t.date?.toDate ? t.date.toDate() : new Date(t.date as any),
     }));
   }, [rawTransactions]);
 
@@ -144,7 +144,7 @@ export function TransactionsView() {
   }, [transactions, firestore, user]);
 
 
-  const addTransaction = (data: Omit<Transaction, 'id' | 'date'> & {date: Date}) => {
+  const addTransaction = (data: Omit<Transaction, 'id' | 'date'> & { date: Date }) => {
     if (!transactionsRef || !firestore || !user || !accounts) return;
     addDocumentNonBlocking(transactionsRef, data);
 
@@ -197,7 +197,7 @@ export function TransactionsView() {
   };
 
   const deleteTransaction = (transaction: Transaction) => {
-    if (!firestore || !user || !accounts) return;
+    if (!firestore || !user) return;
     const docRef = doc(firestore, 'users', user.uid, 'transactions', transaction.id);
     deleteDocumentNonBlocking(docRef);
 
@@ -219,7 +219,7 @@ export function TransactionsView() {
     if (!categoriesRef) return;
     const promise = addDocumentNonBlocking(categoriesRef, { name, type });
     promise.then((docRef) => {
-      if(docRef) {
+      if (docRef) {
         form.setValue('category', docRef.id);
       }
     });
@@ -237,7 +237,7 @@ export function TransactionsView() {
     resolver: zodResolver(transactionSchema),
     defaultValues: {
       description: "",
-      amount: 0,
+      amount: undefined,
       accountId: "",
       toAccountId: "",
       category: "",
@@ -308,7 +308,7 @@ export function TransactionsView() {
 
     form.reset({
       description: "",
-      amount: 0,
+      amount: undefined,
       category: defaultExpenseCategory?.id || "",
       type: "expense",
       subType: "Need",
@@ -445,7 +445,7 @@ export function TransactionsView() {
                   <SelectContent>
                     <SelectItem value="all">All Months</SelectItem>
                     {availableMonths.map(month => (
-                      <SelectItem key={month} value={month}>{format(parseISO(`${month}-01`), "MMMM yyyy")}</SelectItem>
+                      <SelectItem key={month} value={month}>{format(new Date(`${month}-02`), "MMMM yyyy")}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -487,7 +487,7 @@ export function TransactionsView() {
               Net flow for selection: <span className={cn("font-medium", filteredTotal >= 0 ? "text-primary" : "text-destructive")}>{formatAmount(filteredTotal)}</span>
             </CardDescription>
           </div>
-           <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+          <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
             <DialogTrigger asChild>
               <Button onClick={openNewTransactionDialog} disabled={!accounts || accounts.length === 0} size="sm">
                 Add Transaction
@@ -555,7 +555,7 @@ export function TransactionsView() {
                         <FormItem>
                           <FormLabel>Amount</FormLabel>
                           <FormControl>
-                            <Input type="number" placeholder="0" {...field} />
+                            <Input type="number" placeholder="" {...field} />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -740,7 +740,7 @@ export function TransactionsView() {
                   <TableRow key={transaction.id}>
                     <TableCell className="p-2">
                       <div className="font-medium">{transaction.description}</div>
-                      <div className="text-sm text-muted-foreground">{format(transaction.date, 'M/d/yy')}</div>
+                      <div className="text-sm text-muted-foreground">{format(transaction.date, "M/d/yy")}</div>
                     </TableCell>
                     <TableCell className="p-2">{renderTransactionDetails(transaction)}</TableCell>
                     <TableCell className={cn("text-right font-medium p-2", transaction.type === 'income' ? 'text-primary' : transaction.type === 'expense' ? 'text-destructive' : 'text-muted-foreground')}>
@@ -771,9 +771,3 @@ export function TransactionsView() {
     </div>
   );
 }
-
-    
-
-    
-
-

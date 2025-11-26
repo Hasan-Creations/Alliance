@@ -30,7 +30,19 @@ export function DataExporter({ compact = false }: DataExporterProps) {
 
   const { data: tasks, isLoading: loadingTasks } = useCollection<Task>(tasksRef);
   const { data: habits, isLoading: loadingHabits } = useCollection<Habit>(habitsRef);
-  const { data: transactions, isLoading: loadingTransactions } = useCollection<Transaction>(transactionsRef);
+  
+  const { data: rawTransactions, isLoading: loadingTransactions } = useCollection<Omit<Transaction, 'date'> & { date: any }>(transactionsRef);
+
+  const transactions = useMemo(() => {
+    if (!rawTransactions) return null;
+    return rawTransactions.map(t => ({
+      ...t,
+      // The `date` can be a Firestore Timestamp, so we convert it to a JS Date object.
+      // It might also already be a Date object if it's from the local cache.
+      date: t.date?.toDate ? t.date.toDate() : (t.date as Date),
+    }));
+  }, [rawTransactions]);
+  
   const { data: accounts, isLoading: loadingAccounts } = useCollection<Account>(accountsRef);
 
   const isLoading = loadingTasks || loadingHabits || loadingTransactions || loadingAccounts;
@@ -40,13 +52,15 @@ export function DataExporter({ compact = false }: DataExporterProps) {
     const months = new Set<string>();
 
     allData.forEach(item => {
-      const itemDateStr = (item as any).dueDate || (item as any).date;
-      if (itemDateStr && typeof itemDateStr === 'string') {
+      const itemDateSource = (item as any).dueDate || (item as any).date;
+      if (itemDateSource) {
         try {
-          const itemDate = parseISO(itemDateStr);
-          months.add(format(startOfMonth(itemDate), 'yyyy-MM'));
+            const itemDate = typeof itemDateSource === 'string' ? parseISO(itemDateSource) : itemDateSource as Date;
+            if(!isNaN(itemDate.getTime())) {
+                months.add(format(startOfMonth(itemDate), 'yyyy-MM'));
+            }
         } catch (e) {
-          console.warn(`Invalid date format found: ${itemDateStr}`);
+          console.warn(`Invalid date format found: ${itemDateSource}`);
         }
       }
     });
@@ -118,7 +132,7 @@ export function DataExporter({ compact = false }: DataExporterProps) {
       summarySheet.mergeCells('A1:C1');
       summarySheet.addRow([]); // Spacer
 
-      const monthlyTransactions = transactions.filter(t => isSameMonth(parseISO(t.date), monthDate));
+      const monthlyTransactions = transactions.filter(t => isSameMonth(t.date, monthDate));
       const monthlyIncome = monthlyTransactions.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
       const monthlyExpenses = monthlyTransactions.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
 
@@ -269,7 +283,7 @@ export function DataExporter({ compact = false }: DataExporterProps) {
         }
 
         const row = transactionsSheet.addRow({
-            date: format(parseISO(t.date), 'PPP'),
+            date: format(t.date, 'PPP'),
             type: t.type,
             description: t.description,
             from: fromAccount,

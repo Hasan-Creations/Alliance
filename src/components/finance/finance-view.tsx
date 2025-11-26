@@ -1,3 +1,4 @@
+
 "use client";
 
 import React from 'react';
@@ -14,7 +15,7 @@ export const FinanceView = React.memo(function FinanceView() {
         <p className="text-muted-foreground">Track your transactions and manage your budget.</p>
       </div>
 
-      <Tabs defaultValue="transactions">
+      <Tabs defaultValue="summary">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="summary">Summary</TabsTrigger>
           <TabsTrigger value="transactions">Transactions</TabsTrigger>
@@ -31,3 +32,4 @@ export const FinanceView = React.memo(function FinanceView() {
   );
 });
 FinanceView.displayName = 'FinanceView';
+

@@ -20,7 +20,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart"
 import { DonutLabel } from "@/components/ui/donut-chart"
-import { format, startOfMonth, isSameMonth, subMonths, addMonths, parseISO } from "date-fns"
+import { format, startOfMonth, isSameMonth, subMonths, addMonths } from "date-fns"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
 import { useCollection, useFirestore, useUser, useMemoFirebase } from "@/firebase";
@@ -57,14 +57,24 @@ export function BudgetSummary() {
     if (!firestore || !user) return null;
     return collection(firestore, 'users', user.uid, 'transactions');
   }, [firestore, user]);
-  const { data: transactions, isLoading: isLoadingTransactions } = useCollection<Transaction>(transactionsRef);
+
+  const { data: rawTransactions, isLoading: isLoadingTransactions } = useCollection<Omit<Transaction, 'date'> & { date: any }>(transactionsRef);
+
+  const transactions = useMemo(() => {
+    if (!rawTransactions) return null;
+    return rawTransactions.map(t => ({
+      ...t,
+      // The `date` can be a Firestore Timestamp, so we convert it to a JS Date object.
+      date: t.date?.toDate ? t.date.toDate() : (t.date as Date),
+    }));
+  }, [rawTransactions]);
 
   const [activeMonth, setActiveMonth] = React.useState(startOfMonth(new Date()))
 
   const monthlyData = useMemo(() => {
     if (!transactions || !accounts) return { totalIncome: 0, needsTotal: 0, wantsTotal: 0, savingsTotal: 0, remainingToBudget: 0, chartData: [], totalSpending: 0 };
 
-    const monthlyTransactions = transactions.filter(t => isSameMonth(parseISO(t.date), activeMonth));
+    const monthlyTransactions = transactions.filter(t => isSameMonth(t.date, activeMonth));
     const savingsAccount = accounts.find(a => a.name === 'Savings Account');
 
     const totalIncome = monthlyTransactions
@@ -264,3 +274,5 @@ export function BudgetSummary() {
     </div>
   )
 }
+
+    

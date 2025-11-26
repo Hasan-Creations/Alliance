@@ -11,6 +11,8 @@ import { HabitsView } from '@/components/habits/habits-view';
 import { FinanceView } from '@/components/finance/finance-view';
 import { SettingsView } from '@/components/settings/settings-view';
 import { AppViewContext, AppViewContextProvider } from "@/context/app-view-context";
+import { FirebaseMessagingListener } from '@/components/FirebaseMessagingListener';
+import { NotificationPrompter } from '@/components/NotificationPrompter';
 
 function CurrentView() {
     const { view } = useContext(AppViewContext);
@@ -35,6 +37,8 @@ function CurrentView() {
 
     return (
         <div className="flex min-h-screen w-full">
+            <FirebaseMessagingListener />
+            <NotificationPrompter />
             <MainNav />
             <main className="flex-1 flex flex-col bg-background w-full">
                 <div className="flex-1 py-4 sm:py-6 lg:py-8 pb-24 md:pb-8">

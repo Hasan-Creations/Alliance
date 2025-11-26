@@ -13,7 +13,7 @@ import { useCollection, useFirestore, useUser, useMemoFirebase } from "@/firebas
 import { collection } from "firebase/firestore";
 import type { Transaction } from "@/lib/types";
 import { AppViewContext } from "@/context/app-view-context";
-import { parseISO } from "date-fns";
+
 
 const chartConfig = {
   value: {
@@ -38,13 +38,24 @@ export function FinanceSummary() {
     if (!firestore || !user) return null;
     return collection(firestore, 'users', user.uid, 'transactions');
   }, [firestore, user]);
-  const { data: transactions, isLoading: isLoadingTransactions } = useCollection<Transaction>(transactionsRef);
+
+  const { data: rawTransactions, isLoading: isLoadingTransactions } = useCollection<Omit<Transaction, 'date'> & { date: any }>(transactionsRef);
+
+  const transactions = useMemo(() => {
+    if (!rawTransactions) return null;
+    return rawTransactions.map(t => ({
+      ...t,
+      // The `date` can be a Firestore Timestamp, so we convert it to a JS Date object.
+      // It might also already be a Date object if it's from the local cache.
+      date: t.date?.toDate ? t.date.toDate() : (t.date as Date),
+    }));
+  }, [rawTransactions]);
 
   const monthlyData = useMemo(() => {
     if (!transactions) return { totalIncome: 0, totalExpenses: 0, chartData: [] };
     const currentMonth = new Date();
 
-    const monthlyTransactions = transactions.filter(t => isSameMonth(parseISO(t.date), currentMonth));
+    const monthlyTransactions = transactions.filter(t => isSameMonth(t.date, currentMonth));
 
     const totalIncome = monthlyTransactions
       .filter(t => t.type === 'income')

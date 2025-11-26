@@ -101,7 +101,19 @@ export function TransactionsView() {
     if (!firestore || !user) return null;
     return collection(firestore, 'users', user.uid, 'transactions');
   }, [firestore, user]);
-  const { data: transactions, isLoading: isLoadingTransactions } = useCollection<Transaction>(transactionsRef);
+  
+  const { data: rawTransactions, isLoading: isLoadingTransactions } = useCollection<Omit<Transaction, 'date'> & { date: any }>(transactionsRef);
+
+  const transactions = useMemo(() => {
+    if (!rawTransactions) return null;
+    return rawTransactions.map(t => ({
+      ...t,
+      // The `date` can be a Firestore Timestamp, so we convert it to a JS Date object.
+      // Firestore Timestamps have a `toDate()` method.
+      date: t.date?.toDate ? t.date.toDate() : parseISO(t.date as string),
+    }));
+  }, [rawTransactions]);
+
 
   const categoriesRef = useMemoFirebase(() => {
     if (!firestore || !user) return null;
@@ -119,7 +131,7 @@ export function TransactionsView() {
         transactionsToMigrate.forEach(t => {
           const docRef = doc(firestore, 'users', user.uid, 'transactions', t.id);
           // The getTime() will be based on user's local timezone but consistent for backfill
-          const newTimestamp = new Date(`${t.date}T00:00:00`).getTime();
+          const newTimestamp = new Date(t.date).getTime();
           batch.update(docRef, { createdAt: newTimestamp });
         });
         batch.commit().then(() => {
@@ -132,7 +144,7 @@ export function TransactionsView() {
   }, [transactions, firestore, user]);
 
 
-  const addTransaction = (data: Omit<Transaction, 'id'>) => {
+  const addTransaction = (data: Omit<Transaction, 'id' | 'date'> & {date: Date}) => {
     if (!transactionsRef || !firestore || !user || !accounts) return;
     addDocumentNonBlocking(transactionsRef, data);
 
@@ -150,7 +162,7 @@ export function TransactionsView() {
     }
   };
 
-  const updateTransaction = (id: string, oldTransaction: Transaction, newData: Omit<Transaction, 'id'>) => {
+  const updateTransaction = (id: string, oldTransaction: Transaction, newData: Omit<Transaction, 'id' | 'date'> & { date: Date }) => {
     if (!firestore || !user) return;
     const docRef = doc(firestore, 'users', user.uid, 'transactions', id);
     updateDocumentNonBlocking(docRef, newData);
@@ -264,11 +276,11 @@ export function TransactionsView() {
   const onSubmit = (values: TransactionFormValues) => {
     const categoryName = categories?.find(c => c.id === values.category)?.name;
 
-    const transactionData: Omit<Transaction, 'id'> = {
+    const transactionData = {
       description: values.description,
       amount: values.amount,
       type: values.type,
-      date: format(values.date, 'yyyy-MM-dd'),
+      date: values.date, // Pass the Date object directly
       accountId: values.accountId,
       createdAt: editingTransaction?.createdAt ?? Date.now(), // Preserve original createdAt or set new
       ...(values.toAccountId && { toAccountId: values.toAccountId }),
@@ -325,7 +337,7 @@ export function TransactionsView() {
       description: transaction.description,
       amount: transaction.amount,
       type: transaction.type,
-      date: parseISO(transaction.date),
+      date: transaction.date,
       accountId: transaction.accountId,
       toAccountId: transaction.toAccountId,
       category: categoryId,
@@ -347,7 +359,7 @@ export function TransactionsView() {
     if (!transactions) return [];
     const months = new Set<string>();
     transactions.forEach(transaction => {
-      const month = format(parseISO(transaction.date), 'yyyy-MM');
+      const month = format(transaction.date, 'yyyy-MM');
       months.add(month);
     });
     return Array.from(months).sort().reverse();
@@ -380,12 +392,12 @@ export function TransactionsView() {
     const categoryName = categories?.find(c => c.id === filterCategory)?.name;
 
     return transactions
-      .filter(t => filterMonth === 'all' || format(parseISO(t.date), 'yyyy-MM') === filterMonth)
+      .filter(t => filterMonth === 'all' || format(t.date, 'yyyy-MM') === filterMonth)
       .filter(t => filterType === 'all' || t.type === filterType)
       .filter(t => filterCategory === 'all' || t.type === 'transfer' || t.category === categoryName)
       .sort((a, b) => {
-        const dateA = a.createdAt || new Date(`${a.date}T00:00:00`).getTime();
-        const dateB = b.createdAt || new Date(`${b.date}T00:00:00`).getTime();
+        const dateA = a.createdAt || new Date(a.date).getTime();
+        const dateB = b.createdAt || new Date(b.date).getTime();
         return dateB - dateA;
       });
   }, [transactions, filterMonth, filterCategory, filterType, categories]);
@@ -728,7 +740,7 @@ export function TransactionsView() {
                   <TableRow key={transaction.id}>
                     <TableCell className="p-2">
                       <div className="font-medium">{transaction.description}</div>
-                      <div className="text-sm text-muted-foreground">{format(parseISO(transaction.date), 'M/d/yy')}</div>
+                      <div className="text-sm text-muted-foreground">{format(transaction.date, 'M/d/yy')}</div>
                     </TableCell>
                     <TableCell className="p-2">{renderTransactionDetails(transaction)}</TableCell>
                     <TableCell className={cn("text-right font-medium p-2", transaction.type === 'income' ? 'text-primary' : transaction.type === 'expense' ? 'text-destructive' : 'text-muted-foreground')}>
@@ -763,4 +775,5 @@ export function TransactionsView() {
     
 
     
+
 

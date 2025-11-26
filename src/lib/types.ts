@@ -38,7 +38,7 @@ export interface Transaction {
   id: string;
   accountId: string; // Source account for all types
   toAccountId?: string; // Destination account, ONLY for transfers
-  date: string;
+  date: Date; // Should be a Date object or Firestore Timestamp
   amount: number;
   description: string;
   category?: string; // Optional: not used for transfers

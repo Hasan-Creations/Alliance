@@ -263,7 +263,8 @@ export function DataExporter({ compact = false }: DataExporterProps) {
       ];
       setHeaderStyle(transactionsSheet.getRow(1));
       
-      const sortedTransactions = monthlyTransactions.sort((a, b) => a.createdAt - b.createdAt);
+      // UPDATED: Sorted chronologically by Date (Ascending: Oldest -> Newest)
+      const sortedTransactions = monthlyTransactions.sort((a, b) => a.date.getTime() - b.date.getTime());
       
       sortedTransactions.forEach(t => {
         let fromAccount = '';
@@ -301,7 +302,7 @@ export function DataExporter({ compact = false }: DataExporterProps) {
       const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
-a.href = url;
+      a.href = url;
       a.download = `Alliance_Export_${format(monthDate, 'MMM_yyyy')}.xlsx`;
       document.body.appendChild(a);
       a.click();

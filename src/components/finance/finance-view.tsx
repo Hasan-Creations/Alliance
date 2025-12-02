@@ -15,7 +15,7 @@ export const FinanceView = React.memo(function FinanceView() {
         <p className="text-muted-foreground">Track your transactions and manage your budget.</p>
       </div>
 
-      <Tabs defaultValue="summary">
+      <Tabs defaultValue="transactions">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="summary">Summary</TabsTrigger>
           <TabsTrigger value="transactions">Transactions</TabsTrigger>

@@ -108,8 +108,6 @@ export function TransactionsView() {
     if (!rawTransactions) return null;
     return rawTransactions.map(t => ({
       ...t,
-      // The `date` can be a Firestore Timestamp, so we convert it to a JS Date object.
-      // Firestore Timestamps have a `toDate()` method.
       date: t.date?.toDate ? t.date.toDate() : new Date(t.date as any),
     }));
   }, [rawTransactions]);
@@ -120,29 +118,6 @@ export function TransactionsView() {
     return collection(firestore, 'users', user.uid, 'transactionCategories');
   }, [firestore, user]);
   const { data: categories, isLoading: isLoadingCategories } = useCollection<TransactionCategory>(categoriesRef);
-
-  // Lazy migration effect
-  useEffect(() => {
-    if (transactions && firestore && user) {
-      const transactionsToMigrate = transactions.filter(t => !t.createdAt);
-      if (transactionsToMigrate.length > 0) {
-        console.log(`Found ${transactionsToMigrate.length} transactions to migrate.`);
-        const batch = writeBatch(firestore);
-        transactionsToMigrate.forEach(t => {
-          const docRef = doc(firestore, 'users', user.uid, 'transactions', t.id);
-          // The getTime() will be based on user's local timezone but consistent for backfill
-          const newTimestamp = new Date(t.date).getTime();
-          batch.update(docRef, { createdAt: newTimestamp });
-        });
-        batch.commit().then(() => {
-          console.log("Successfully migrated old transactions.");
-        }).catch(error => {
-          console.error("Error migrating transactions: ", error);
-        });
-      }
-    }
-  }, [transactions, firestore, user]);
-
 
   const addTransaction = (data: Omit<Transaction, 'id' | 'date'> & { date: Date }) => {
     if (!transactionsRef || !firestore || !user || !accounts) return;
@@ -229,7 +204,7 @@ export function TransactionsView() {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newCategoryType, setNewCategoryType] = useState<'income' | 'expense'>('expense');
 
-  const [filterMonth, setFilterMonth] = useState<string>("all");
+  const [filterMonth, setFilterMonth] = useState<string>(format(new Date(), 'yyyy-MM'));
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [filterType, setFilterType] = useState<string>("all");
 
@@ -237,7 +212,7 @@ export function TransactionsView() {
     resolver: zodResolver(transactionSchema),
     defaultValues: {
       description: "",
-      amount: undefined,
+      amount: '' as any,
       accountId: "",
       toAccountId: "",
       category: "",
@@ -275,7 +250,6 @@ export function TransactionsView() {
 
   const onSubmit = (values: TransactionFormValues) => {
     const categoryName = categories?.find(c => c.id === values.category)?.name;
-
     const transactionData = {
       description: values.description,
       amount: values.amount,
@@ -308,7 +282,7 @@ export function TransactionsView() {
 
     form.reset({
       description: "",
-      amount: undefined,
+      amount: '' as any,
       category: defaultExpenseCategory?.id || "",
       type: "expense",
       subType: "Need",
@@ -429,6 +403,8 @@ export function TransactionsView() {
     return `${getAccountName(transaction.accountId)} / ${transaction.category}`;
   }
 
+  const isLoading = isLoadingTransactions || isLoadingCategories || isLoadingAccounts;
+
   return (
     <div className="space-y-4">
       <Card>
@@ -436,7 +412,7 @@ export function TransactionsView() {
           <CardTitle className="text-base">Sort Transactions</CardTitle>
         </CardHeader>
         <CardContent className="p-3 pt-0">
-          {isLoadingTransactions || isLoadingCategories ? <Skeleton className="h-10 w-full" /> : (
+          {isLoading ? <Skeleton className="h-10 w-full" /> : (
             <div className="grid grid-cols-3 sm:grid-cols-3 gap-2">
               <div>
                 <Label htmlFor="filter-month" className="text-xs">Month</Label>
@@ -729,7 +705,7 @@ export function TransactionsView() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {isLoadingTransactions ? (
+              {isLoading ? (
                 <TableRow>
                   <TableCell colSpan={4} className="h-24 text-center">
                     <Skeleton className="h-8 w-full" />

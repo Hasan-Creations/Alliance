@@ -6,6 +6,7 @@ import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { initializeFirestore, getFirestore, persistentLocalCache, persistentMultipleTabManager } from 'firebase/firestore'
 import { getRemoteConfig } from 'firebase/remote-config';
+import { getAnalytics } from 'firebase/analytics';
 
 // IMPORTANT: DO NOT MODIFY THIS FUNCTION
 export function initializeFirebase() {
@@ -43,6 +44,7 @@ export function getSdks(firebaseApp: FirebaseApp) {
   // Otherwise, it returns the default instance. This prevents re-initialization errors.
   const firestore = getFirestore(firebaseApp);
   const remoteConfig = getRemoteConfig(firebaseApp);
+  const analytics = typeof window !== 'undefined' ? getAnalytics(firebaseApp) : null;
   // You can set default values here if needed
   // remoteConfig.defaultConfig = { ... };
   
@@ -51,6 +53,7 @@ export function getSdks(firebaseApp: FirebaseApp) {
     auth: getAuth(firebaseApp),
     firestore: firestore,
     remoteConfig: remoteConfig,
+    analytics: analytics,
   };
 }
 
@@ -59,6 +62,7 @@ export * from './client-provider';
 export * from './firestore/use-collection';
 export * from './firestore/use-doc';
 export * from './auth/use-user';
+export * from './analytics/use-analytics';
 export * from './remote-config/use-remote-config';
 export * from './non-blocking-updates';
 export * from './non-blocking-login';

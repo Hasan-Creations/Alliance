@@ -21,6 +21,7 @@ export function FirebaseClientProvider({ children }: FirebaseClientProviderProps
       auth={firebaseServices.auth}
       firestore={firebaseServices.firestore}
       remoteConfig={firebaseServices.remoteConfig}
+      analytics={firebaseServices.analytics}
     >
       {children}
     </FirebaseProvider>

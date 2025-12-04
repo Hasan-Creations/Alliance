@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useAuth, useUser } from '@/firebase';
-import { initiateEmailSignIn, initiateEmailSignUp } from '@/firebase/non-blocking-login';
+import { initiateEmailSignIn, useSignUp } from '@/firebase/non-blocking-login';
 import { useToast } from '@/hooks/use-toast';
 import { AppLogo } from '@/components/app-logo';
 import { useRouter } from 'next/navigation';
@@ -36,6 +36,7 @@ export default function LoginPage() {
   const { user, isUserLoading } = useUser();
   const router = useRouter();
   const { toast } = useToast();
+  const { initiateEmailSignUp } = useSignUp(); // Use the new hook
 
   useEffect(() => {
     // If the user is logged in, redirect them to the main router page.

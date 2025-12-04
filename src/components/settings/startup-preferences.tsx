@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -19,6 +20,7 @@ const startupOptions: { value: View, label: string }[] = [
   { value: 'todos', label: 'To-Do List' },
   { value: 'habits', label: 'Habit Tracker' },
   { value: 'finance', label: 'Finance Tracker' },
+  { value: 'notes', label: 'Notes' },
 ];
 
 interface StartupPreferencesProps {

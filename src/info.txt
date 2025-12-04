@@ -1,0 +1,136 @@
+
+# Alliance App - Technical Documentation
+
+This document provides a detailed overview of the Alliance application's architecture, structure, and implementation details.
+
+## 1. Core Technology Stack
+
+- **Framework**: Next.js 15 with React (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS with ShadCN UI components.
+- **Backend-as-a-Service (BaaS)**: Firebase
+  - **Database**: Firestore for real-time data storage.
+  - **Authentication**: Firebase Authentication for user management.
+  - **Push Notifications**: Firebase Cloud Messaging (FCM).
+- **UI State Management**: React Context API (`AppViewContext`).
+- **Deployment**: PWA (Progressive Web App) enabled for offline capabilities and installation.
+
+---
+
+## 2. Project File & Folder Structure
+
+- **`/` (Root)**
+  - `next.config.ts`: Next.js configuration, including PWA setup and image optimization rules.
+  - `tailwind.config.ts`: Tailwind CSS theme and plugin configuration.
+  - `tsconfig.json`: TypeScript compiler options.
+  - `package.json`: Project dependencies and scripts.
+  - `firestore.rules`: Security rules for the Firestore database.
+  - `docs/backend.json`: A JSON schema defining the data entities and Firestore structure.
+  - `public/`: Static assets like images, icons, and `manifest.json`.
+
+- **`src/app/` (App Router)**
+  - `layout.tsx`: The root layout for the entire application. It sets up the HTML shell, global fonts, the `ThemeProvider` for dark/light mode, and the `FirebaseClientProvider`.
+  - `globals.css`: Global styles and ShadCN/Tailwind theme variables (CSS custom properties).
+  - `page.tsx`: The main entry point. It acts as a router, checking for user authentication and rendering either the public `WelcomePage` or the authenticated `AppLayout`.
+  - `login/page.tsx`: The user sign-in and sign-up page.
+  - `welcome/page.tsx`: The public-facing landing page for unauthenticated users.
+  - `contact/page.tsx`, `terms/page.tsx`: Static informational pages.
+  - `sitemap.ts`: Dynamically generates the `sitemap.xml` for SEO.
+
+- **`src/components/` (React Components)**
+  - `ui/`: Core, unstyled UI components from ShadCN (e.g., `button.tsx`, `card.tsx`).
+  - `dashboard/`, `todos/`, `habits/`, `finance/`, `settings/`: Feature-specific components organized by the main app views.
+  - `app-layout.tsx`: The main layout for authenticated users. It contains the `SidebarProvider` and `AppViewContextProvider` and renders the main navigation and the active view.
+  - `main-nav.tsx`: The desktop sidebar navigation.
+  - `bottom-nav.tsx`: The mobile bottom navigation bar.
+  - `theme-provider.tsx`: The context provider for managing light/dark/system themes via `next-themes`.
+
+- **`src/context/` (Global State Management)**
+  - `app-view-context.tsx`: A React Context provider that manages the currently active view (e.g., 'dashboard', 'todos'). This allows any component to know which screen is active and provides a function (`setView`) to switch screens.
+
+- **`src/firebase/` (Firebase Integration)**
+  - `config.ts`: Stores the Firebase project configuration keys.
+  - `index.ts`: Initializes the Firebase app and serves as a "barrel file" to export all necessary Firebase hooks and functions for easy import elsewhere.
+  - `provider.tsx`: The core `FirebaseProvider`. It initializes the onAuthStateChanged listener to track user login state and provides the Firebase app, auth, and firestore instances to the rest of the app via the `useFirebase` hook.
+  - `client-provider.tsx`: A client-side wrapper that calls `initializeFirebase()` once to prevent re-initialization on re-renders. It wraps `FirebaseProvider`.
+  - `auth/use-user.tsx`: A simple hook (`useUser`) that provides direct access to the user's authentication state.
+  - `firestore/`:
+    - `use-collection.tsx`: A real-time hook to subscribe to a Firestore collection.
+    - `use-doc.tsx`: A real-time hook to subscribe to a single Firestore document.
+  - `non-blocking-updates.tsx` & `non-blocking-login.tsx`: These files contain functions for performing Firestore writes and user authentication without using `await`. This improves UI responsiveness by not blocking the main thread while waiting for a response from Firebase. Errors are handled in `.catch()` blocks.
+  - `messaging.ts`: Handles Firebase Cloud Messaging (FCM) logic, including requesting permission and getting the device token.
+
+- **`src/hooks/` (Custom React Hooks)**
+  - `use-toast.ts`: A custom hook for showing toast notifications.
+  - `use-mobile.ts`: A hook to detect if the user is on a mobile-sized screen.
+  - `use-notifications.ts`: A hook that abstracts FCM logic for requesting permission and managing tokens.
+
+- **`src/lib/` (Libraries & Utilities)**
+  - `types.ts`: TypeScript type definitions for all major data models (Task, Habit, Transaction, etc.).
+  - `utils.ts`: Utility functions, most notably `cn` for merging Tailwind CSS classes.
+  - `placeholder-images.ts`: Manages placeholder image data for the app.
+
+---
+
+## 3. Database Structure (Firestore)
+
+The database follows a user-centric, document-oriented structure. All user-specific data is stored in sub-collections under that user's unique ID.
+
+- **`/users/{userId}`** (Document)
+  - Stores `UserProfile` data (displayName, email).
+  - **Sub-collections**:
+    - **`/tasks/{taskId}`**: Stores individual `Task` objects.
+    - **`/habits/{habitId}`**: Stores individual `Habit` objects.
+    - **`/accounts/{accountId}`**: Stores financial accounts (`Account` objects like 'Cash', 'Bank').
+    - **`/transactions/{transactionId}`**: Stores all `Transaction` objects (both income and expenses).
+    - **`/transactionCategories/{categoryId}`**: Stores user-defined categories for income and expenses.
+    - **`/settings/{settingId}`**: Stores user-specific settings. Currently, `startup` is the only document, holding the `startupPage`.
+    - **`/fcmTokens/{tokenId}`**: Stores Firebase Cloud Messaging tokens for push notifications on different devices.
+
+### Firestore Security Rules (`firestore.rules`)
+
+The security rules enforce a strict user-ownership model:
+- A user can only read, write, update, or delete documents that are under their own `/users/{userId}` path.
+- The `isOwner(userId)` function is used globally to check if `request.auth.uid == userId`.
+- Listing all users (`/users`) is disallowed to protect user privacy.
+- All write operations require authentication.
+
+---
+
+## 4. Key Implementation Methods & Patterns
+
+- **Authentication Flow**:
+  - The main `AppPage` (`src/app/page.tsx`) uses the `useUser` hook.
+  - If the user is loading (`isUserLoading`), a spinner is shown.
+  - If no user is authenticated, the `WelcomePage` is rendered.
+  - If a user is authenticated, the main `AppLayout` is rendered, which contains the protected parts of the app.
+
+- **UI Navigation & View Management**:
+  - The `AppViewContext` holds the state for the current view (e.g., 'dashboard').
+  - The `MainNav` (sidebar) and `BottomNav` (mobile) components use `setView` from this context to change the active view.
+  - The `AppLayout` component reads the current `view` and conditionally renders the corresponding component (e.g., `DashboardView`, `TodoView`).
+
+- **Data Fetching (Real-time)**:
+  - All real-time data from Firestore is fetched using the custom hooks `useCollection` and `useDoc`.
+  - These hooks take a Firestore `Query` or `DocumentReference` as input.
+  - They use `onSnapshot` to listen for real-time updates and manage `data`, `isLoading`, and `error` states.
+  - **Crucially**, the query/reference passed to these hooks is memoized using `useMemoFirebase` to prevent infinite re-render loops.
+
+- **Data Writing (Non-Blocking)**:
+  - To keep the UI responsive, all Firestore write operations (`setDoc`, `addDoc`, `updateDoc`, `deleteDoc`) are handled by the functions in `src/firebase/non-blocking-updates.tsx`.
+  - These functions do **not** use `await`. Instead, they fire the request and immediately return, relying on Firestore's local cache for an optimistic UI update. Any errors are caught in a `.catch()` block and handled by a global error emitter.
+
+- **Error Handling (Firebase Security Rules)**:
+  - When a non-blocking Firebase operation fails due to "Missing or insufficient permissions," it's caught by the `.catch()` block.
+  - A new `FirestorePermissionError` is created, which formats the error context into a detailed, human-readable message.
+  - This error is then sent to a global `errorEmitter`.
+  - The `<FirebaseErrorListener />` component, located in `FirebaseProvider`, listens for these events and throws the error, which is then caught and displayed by Next.js's development error overlay, making it easy to debug security rules.
+
+- **Performance Optimization**:
+  - `React.memo` is used on all major view components (`DashboardView`, `TodoView`, etc.) and some frequently re-rendered components (`TaskItem`) to prevent re-renders when their props haven't changed. This was a key fix to reduce "Total Blocking Time" reported by Lighthouse.
+  - Client components (`'use client';`) are used strategically to ensure that server-side rendering is leveraged where possible, but client-side interactivity is enabled where needed. Files containing only client-side logic (like Firebase helpers) are marked as such to prevent them from being unnecessarily included in server-side bundles.
+
+- **Styling**:
+  - The theme is defined in `globals.css` using HSL CSS variables for light and dark modes.
+  - The `ThemeProvider` from `next-themes` wraps the app and applies the `.dark` class to the `<html>` element to toggle themes.
+  - The `ThemeToggle` button in the settings view calls the `setTheme` function from the `useTheme` hook to switch between modes.

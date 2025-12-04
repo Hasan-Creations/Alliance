@@ -28,6 +28,14 @@ export interface Habit {
   createdAt: number;
 }
 
+export interface Note {
+  id: string;
+  title?: string;
+  content: string;
+  createdAt: number;
+  updatedAt: number;
+}
+
 export interface Account {
   id: string;
   name: string;

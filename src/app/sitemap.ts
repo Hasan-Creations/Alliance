@@ -1,6 +1,7 @@
 import { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  // TODO: Make this an environment variable
   const baseUrl = 'https://myalliance.vercel.app';
 
   return [

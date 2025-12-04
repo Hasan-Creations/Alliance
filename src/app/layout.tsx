@@ -4,8 +4,6 @@ import { FirebaseClientProvider } from '@/firebase/client-provider';
 import { Toaster } from "@/components/ui/toaster";
 import './globals.css';
 import { cn } from '@/lib/utils';
-import { FirebaseMessagingListener } from '@/components/FirebaseMessagingListener';
-import { NotificationPrompter } from '@/components/NotificationPrompter';
 import { ThemeProvider } from '@/components/theme-provider';
 
 export const metadata: Metadata = {
@@ -42,8 +40,6 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <FirebaseClientProvider>
-            <FirebaseMessagingListener />
-            <NotificationPrompter />
             {children}
           </FirebaseClientProvider>
           <Toaster />

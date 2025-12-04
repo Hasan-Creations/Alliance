@@ -6,8 +6,10 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile,
+  getAdditionalUserInfo,
 } from 'firebase/auth';
 import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
 
 type ToastFn = ReturnType<typeof useToast>['toast'];
 
@@ -56,6 +58,39 @@ function handleAuthError(e: any, toast: ToastFn) {
   });
 }
 
+/**
+ * A hook that provides a wrapped sign-up function.
+ * This is necessary because useRouter can only be used in client components.
+ */
+export function useSignUp() {
+  const router = useRouter();
+
+  const initiateEmailSignUp = (authInstance: Auth, email: string, password: string, displayName: string, toast: ToastFn): void => {
+    createUserWithEmailAndPassword(authInstance, email, password)
+      .then((userCredential) => {
+        const additionalInfo = getAdditionalUserInfo(userCredential);
+        
+        // Update profile with display name
+        updateProfile(userCredential.user, { displayName }).catch((e) => {
+            console.error("Failed to update profile:", e);
+        });
+
+        // If it's a new user, redirect to the initial setup page
+        if (additionalInfo?.isNewUser) {
+          router.push('/initial-setup');
+        }
+        // For existing users (which shouldn't happen here, but as a fallback)
+        // or after setup, the onAuthStateChanged listener in the provider will handle the redirect.
+
+      })
+      .catch((e) => {
+        handleAuthError(e, toast);
+      });
+  };
+
+  return { initiateEmailSignUp };
+}
+
 
 /** Initiate anonymous sign-in (non-blocking). */
 export function initiateAnonymousSignIn(authInstance: Auth): void {
@@ -69,22 +104,6 @@ export function initiateAnonymousSignIn(authInstance: Auth): void {
   // Code continues immediately. Auth state change is handled by onAuthStateChanged listener.
 }
 
-/** Initiate email/password sign-up (non-blocking). */
-export function initiateEmailSignUp(authInstance: Auth, email: string, password: string, displayName: string, toast: ToastFn): void {
-  // CRITICAL: Call createUserWithEmailAndPassword directly. Do NOT use 'await createUserWithEmailAndPassword(...)'.
-  createUserWithEmailAndPassword(authInstance, email, password)
-    .then((userCredential) => {
-        // Once the user is created, update their profile with the display name
-        if (userCredential.user) {
-            updateProfile(userCredential.user, { displayName }).catch((e) => {
-                console.error("Failed to update profile:", e);
-            });
-        }
-    })
-    .catch((e) => {
-      handleAuthError(e, toast);
-    });
-}
 
 /** Initiate email/password sign-in (non-blocking). */
 export function initiateEmailSignIn(authInstance: Auth, email: string, password: string, toast: ToastFn): void {

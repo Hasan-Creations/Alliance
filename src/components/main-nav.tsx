@@ -11,7 +11,7 @@ import {
   Sidebar,
 } from "@/components/ui/sidebar";
 import { AppLogo } from "@/components/app-logo";
-import { CheckSquare, Target, Wallet, Settings, LayoutDashboard } from "lucide-react";
+import { CheckSquare, Target, Wallet, Settings, LayoutDashboard, StickyNote } from "lucide-react";
 import { AppViewContext, type View } from "@/context/app-view-context";
 
 const menuItems: { href: View, label: string, icon: React.ElementType }[] = [
@@ -19,6 +19,7 @@ const menuItems: { href: View, label: string, icon: React.ElementType }[] = [
   { href: "todos", label: "To-Do List", icon: CheckSquare },
   { href: "habits", label: "Habit Tracker", icon: Target },
   { href: "finance", label: "Finance Tracker", icon: Wallet },
+  { href: "notes", label: "Notes", icon: StickyNote },
   { href: "settings", label: "Settings", icon: Settings },
 ];
 

@@ -75,25 +75,23 @@ export function BudgetSummary() {
     if (!transactions || !accounts) return { totalIncome: 0, needsTotal: 0, wantsTotal: 0, savingsTotal: 0, remainingToBudget: 0, chartData: [], totalSpending: 0 };
 
     const monthlyTransactions = transactions.filter(t => isSameMonth(t.date, activeMonth));
-    const savingsAccount = accounts.find(a => a.name === 'Savings Account');
 
     const totalIncome = monthlyTransactions
       .filter(t => t.type === 'income')
       .reduce((acc, t) => acc + t.amount, 0);
 
     const expenses = monthlyTransactions.filter(t => t.type === 'expense');
-
+    
     const needsTotal = expenses.filter(e => e.subType === 'Need').reduce((acc, e) => acc + e.amount, 0);
     const wantsTotal = expenses.filter(e => e.subType === 'Want').reduce((acc, e) => acc + e.amount, 0);
 
-    // This is the amount transferred TO the savings account this month
-    const savingsInflow = monthlyTransactions
-      .filter(t => t.type === 'transfer' && t.toAccountId === savingsAccount?.id)
-      .reduce((acc, t) => acc + t.amount, 0);
+    const savingsTransfers = monthlyTransactions
+        .filter(t => t.type === 'transfer' && accounts.find(a => a.id === t.toAccountId)?.name === 'Savings Account')
+        .reduce((acc, t) => acc + t.amount, 0);
 
     const totalSpending = needsTotal + wantsTotal;
-    const remainingToBudget = totalIncome - totalSpending;
-    const savingsTotal = savingsInflow;
+    const savingsTotal = savingsTransfers;
+    const remainingToBudget = totalIncome - totalSpending - savingsTotal;
 
     const chartData = [
       { type: "Needs", amount: needsTotal, fill: "var(--color-Needs)" },
@@ -261,7 +259,7 @@ export function BudgetSummary() {
               <CardContent className="p-3 pt-0">
                 <div className="text-2xl font-bold">{formatCurrency(remainingToBudget)}</div>
                 <p className="text-xs text-muted-foreground">
-                  Income - Expenses
+                  Income - (Expenses + Savings Transfers)
                 </p>
               </CardContent>
             </Card>

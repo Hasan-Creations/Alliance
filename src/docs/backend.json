@@ -1,0 +1,302 @@
+
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Represents a user's public profile information.",
+      "type": "object",
+      "properties": {
+        "displayName": {
+          "type": "string",
+          "description": "The user's display name."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The user's email address."
+        }
+      },
+      "required": [
+        "displayName",
+        "email"
+      ]
+    },
+    "Task": {
+      "title": "Task",
+      "type": "object",
+      "description": "Represents a to-do task.",
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Title of the task."
+        },
+        "description": {
+          "type": "string",
+          "description": "Detailed description of the task."
+        },
+        "priority": {
+          "type": "string",
+          "description": "Priority of the task.",
+          "enum": [
+            "High",
+            "Medium",
+            "Low"
+          ]
+        },
+        "dueDate": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date",
+          "description": "Due date for the task."
+        },
+        "completed": {
+          "type": "boolean",
+          "description": "Indicates whether the task is completed or not."
+        },
+        "createdAt": {
+          "type": "number",
+          "description": "The timestamp (in milliseconds) when the task was created."
+        }
+      },
+      "required": [
+        "title",
+        "priority",
+        "completed",
+        "createdAt"
+      ]
+    },
+    "Habit": {
+      "title": "Habit",
+      "type": "object",
+      "description": "Represents a tracked habit.",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the habit."
+        },
+        "completions": {
+          "type": "object",
+          "description": "A map of dates to completion status objects.",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "status": {
+                "type": "string",
+                "enum": [
+                  "completed",
+                  "missed"
+                ]
+              },
+              "timestamp": {
+                "type": "number",
+                "description": "The timestamp of when the habit was completed."
+              }
+            },
+            "required": [
+              "status"
+            ]
+          }
+        },
+        "createdAt": {
+          "type": "number",
+          "description": "The timestamp (in milliseconds) when the habit was created."
+        }
+      },
+      "required": [
+        "name",
+        "completions",
+        "createdAt"
+      ]
+    },
+    "Account": {
+      "title": "Account",
+      "description": "Represents a user's financial account (e.g., Cash, Bank).",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "Name of the account."
+        },
+        "balance": {
+          "type": "number",
+          "description": "Current balance of the account."
+        }
+      },
+      "required": [
+        "name",
+        "balance"
+      ]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Represents a single financial transaction, which can be an income or an expense.",
+      "type": "object",
+      "properties": {
+        "accountId": {
+          "type": "string",
+          "description": "The ID of the account this transaction belongs to."
+        },
+        "date": {
+          "type": "string",
+          "format": "date",
+          "description": "Date of the transaction."
+        },
+        "amount": {
+          "type": "number",
+          "description": "Absolute amount of the transaction."
+        },
+        "description": {
+          "type": "string",
+          "description": "Description of the transaction."
+        },
+        "category": {
+          "type": "string",
+          "description": "Category of the transaction."
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "income",
+            "expense"
+          ],
+          "description": "Type of the transaction (credit or debit)."
+        },
+        "subType": {
+          "type": "string",
+          "enum": [
+            "Need",
+            "Want",
+            "Savings"
+          ],
+          "description": "Optional subtype for expenses."
+        },
+        "createdAt": {
+          "type": "number",
+          "description": "The timestamp (in milliseconds) when the transaction was created."
+        }
+      },
+      "required": [
+        "accountId",
+        "date",
+        "amount",
+        "description",
+        "category",
+        "type",
+        "createdAt"
+      ]
+    },
+    "TransactionCategory": {
+      "title": "Transaction Category",
+      "description": "Represents a user-defined category for transactions.",
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "description": "The name of the category."
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "income",
+            "expense"
+          ],
+          "description": "The type of transaction this category applies to."
+        }
+      },
+      "required": [
+        "name",
+        "type"
+      ]
+    },
+    "UserSettings": {
+      "title": "User Settings",
+      "description": "Stores user-specific application settings.",
+      "type": "object",
+      "properties": {
+        "startup": {
+          "type": "object",
+          "description": "Startup preferences.",
+          "properties": {
+            "startupPage": {
+              "type": "string",
+              "description": "The default page to load on app start."
+            }
+          }
+        }
+      }
+    },
+    "FCMToken": {
+      "title": "FCM Token",
+      "description": "Represents a Firebase Cloud Messaging (FCM) device token for a user.",
+      "type": "object",
+      "properties": {
+        "token": {
+          "type": "string",
+          "description": "The FCM device token."
+        },
+        "createdAt": {
+          "type": "number",
+          "description": "The timestamp (in milliseconds) when the token was created."
+        }
+      },
+      "required": ["token", "createdAt"]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password"
+    ]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserProfile"
+      },
+      "description": "Stores public profile information for each user."
+    },
+    "/users/{userId}/tasks/{taskId}": {
+      "schema": {
+        "$ref": "#/entities/Task"
+      },
+      "description": "Stores task data for a specific user."
+    },
+    "/users/{userId}/habits/{habitId}": {
+      "schema": {
+        "$ref": "#/entities/Habit"
+      },
+      "description": "Stores habit data for a specific user."
+    },
+    "/users/{userId}/accounts/{accountId}": {
+      "schema": {
+        "$ref": "#/entities/Account"
+      },
+      "description": "Stores financial accounts for a specific user."
+    },
+    "/users/{userId}/transactions/{transactionId}": {
+      "schema": {
+        "$ref": "#/entities/Transaction"
+      },
+      "description": "Stores all financial transactions for a specific user."
+    },
+    "/users/{userId}/transactionCategories/{categoryId}": {
+      "schema": {
+        "$ref": "#/entities/TransactionCategory"
+      },
+      "description": "Stores user-defined categories for transactions."
+    },
+    "/users/{userId}/settings/startup": {
+      "schema": {
+        "$ref": "#/entities/UserSettings/properties/startup"
+      },
+      "description": "Stores startup preferences for a specific user."
+    },
+    "/users/{userId}/fcmTokens/{tokenId}": {
+      "schema": {
+        "$ref": "#/entities/FCMToken"
+      },
+      "description": "Stores FCM device tokens for a specific user."
+    }
+  }
+}

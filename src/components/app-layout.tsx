@@ -10,6 +10,7 @@ import { TodoView } from '@/components/todos/todo-view';
 import { HabitsView } from '@/components/habits/habits-view';
 import { FinanceView } from '@/components/finance/finance-view';
 import { SettingsView } from '@/components/settings/settings-view';
+import { NotesView } from "@/components/notes/notes-view";
 import { AppViewContext, AppViewContextProvider } from "@/context/app-view-context";
 import { FirebaseMessagingListener } from '@/components/FirebaseMessagingListener';
 import { NotificationPrompter } from '@/components/NotificationPrompter';
@@ -28,6 +29,8 @@ function CurrentView() {
             return <HabitsView />;
         case 'finance':
             return <FinanceView />;
+        case 'notes':
+            return <NotesView />;
         case 'settings':
             return <SettingsView />;
         default:

@@ -1,15 +1,16 @@
+
 "use client";
 
 import { useContext } from "react";
-import { CheckSquare, Target, Wallet, Settings, LayoutDashboard } from "lucide-react";
+import { CheckSquare, Target, Wallet, Settings, LayoutDashboard, StickyNote } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AppViewContext, type View } from "@/context/app-view-context";
 
 const menuItems: { href: View, label: string, icon: React.ElementType }[] = [
-  { href: "dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "todos", label: "To-Do", icon: CheckSquare },
   { href: "habits", label: "Habits", icon: Target },
   { href: "finance", label: "Finance", icon: Wallet },
+  { href: "notes", label: "Notes", icon: StickyNote },
   { href: "settings", label: "Settings", icon: Settings },
 ];
 
@@ -26,7 +27,7 @@ export function BottomNav() {
               key={item.href}
               onClick={() => setView(item.href)}
               className={cn(
-                "flex flex-col items-center justify-center gap-1 text-sm font-medium transition-colors",
+                "flex flex-col items-center justify-center gap-1 text-xs font-medium transition-colors p-1",
                 isActive
                   ? "bg-primary text-primary-foreground"
                   : "text-muted-foreground hover:bg-muted"
@@ -34,7 +35,7 @@ export function BottomNav() {
               
             >
               <item.icon className="h-5 w-5" />
-              <span>{item.label}</span>
+              <span className="truncate">{item.label}</span>
             </button>
           );
         })}

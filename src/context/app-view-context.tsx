@@ -6,7 +6,7 @@ import { useUser, useFirestore, useDoc, useMemoFirebase } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import type { UserStartupSettings } from '@/lib/types';
 
-export type View = 'dashboard' | 'todos' | 'habits' | 'finance' | 'settings';
+export type View = 'dashboard' | 'todos' | 'habits' | 'finance' | 'notes' | 'settings';
 
 export const AppViewContext = createContext<{
   view: View;

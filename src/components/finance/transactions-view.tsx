@@ -101,7 +101,7 @@ export function TransactionsView() {
     if (!firestore || !user) return null;
     return collection(firestore, 'users', user.uid, 'transactions');
   }, [firestore, user]);
-
+  
   const { data: rawTransactions, isLoading: isLoadingTransactions } = useCollection<Omit<Transaction, 'date'> & { date: any }>(transactionsRef);
 
   const transactions = useMemo(() => {
@@ -119,7 +119,7 @@ export function TransactionsView() {
   }, [firestore, user]);
   const { data: categories, isLoading: isLoadingCategories } = useCollection<TransactionCategory>(categoriesRef);
 
-  const addTransaction = (data: Omit<Transaction, 'id' | 'date'> & { date: Date }) => {
+  const addTransaction = (data: Omit<Transaction, 'id' | 'date'> & {date: Date}) => {
     if (!transactionsRef || !firestore || !user || !accounts) return;
     addDocumentNonBlocking(transactionsRef, data);
 
@@ -194,7 +194,7 @@ export function TransactionsView() {
     if (!categoriesRef) return;
     const promise = addDocumentNonBlocking(categoriesRef, { name, type });
     promise.then((docRef) => {
-      if (docRef) {
+      if(docRef) {
         form.setValue('category', docRef.id);
       }
     });
@@ -463,7 +463,7 @@ export function TransactionsView() {
               Net flow for selection: <span className={cn("font-medium", filteredTotal >= 0 ? "text-primary" : "text-destructive")}>{formatAmount(filteredTotal)}</span>
             </CardDescription>
           </div>
-          <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+           <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
             <DialogTrigger asChild>
               <Button onClick={openNewTransactionDialog} disabled={!accounts || accounts.length === 0} size="sm">
                 Add Transaction
@@ -747,3 +747,14 @@ export function TransactionsView() {
     </div>
   );
 }
+
+    
+
+    
+
+
+
+
+
+
+    
